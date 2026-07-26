@@ -12,7 +12,12 @@ gitwhy does three things about that:
 
 Everything runs 100% locally. Nothing is uploaded anywhere. Stdlib only — no dependencies.
 
-<img width="1257" height="702" alt="Screenshot 2026-07-26 204550" src="https://github.com/user-attachments/assets/20848485-6fb0-4737-a52d-e44f267d40b3" />
+<img width="1257" height="747" alt="Screenshot 2026-07-26 205022" src="https://github.com/user-attachments/assets/a317ac26-9826-4b7c-afa5-663037333a6a" />
+
+
+<img width="1243" height="720" alt="Screenshot 2026-07-26 205136" src="https://github.com/user-attachments/assets/7620240c-b527-4408-9cce-8b0c932b2b00" />
+
+*Provenance graph of a 200-session benchmark history — your real project's graph shows your real files.*
 
 
 ## Quickstart
