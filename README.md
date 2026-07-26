@@ -12,7 +12,8 @@ gitwhy does three things about that:
 
 Everything runs 100% locally. Nothing is uploaded anywhere. Stdlib only — no dependencies.
 
-![provenance graph](docs/graph.png)
+<img width="1257" height="702" alt="Screenshot 2026-07-26 204550" src="https://github.com/user-attachments/assets/20848485-6fb0-4737-a52d-e44f267d40b3" />
+
 
 ## Quickstart
 
