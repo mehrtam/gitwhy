@@ -1,4 +1,5 @@
 # gitwhy
+![tests](https://github.com/mehrtam/gitwhy/actions/workflows/tests.yml/badge.svg)
 
 **`git blame` tells you who wrote the line. This tells you why.**
 
