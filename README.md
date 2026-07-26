@@ -57,6 +57,36 @@ Add one line to your `CLAUDE.md` or `AGENTS.md`:
 
 A three-month, 51-commit project digests to ~3k tokens — versus the tens of thousands an agent burns cold-starting with grep/read loops, every single session.
 
+## The three outputs
+
+One pipeline, three consumers:
+
+| file | for | what's inside |
+|---|---|---|
+| `gitwhy-report.html` | humans | interactive provenance graph + per-file origin stories |
+| `GITWHY.md` | agents | token-cheap digest, read at session start via `CLAUDE.md` / `AGENTS.md` |
+| `gitwhy.json` | machines | structured provenance for scripts and tooling |
+
+`gitwhy.json` shape:
+
+```json
+{
+  "repo": "myproject",
+  "files": {
+    "src/auth.py": [
+      { "date": "2026-04-01", "agent": "claude",
+        "prompt": "refactor the auth flow to use short-lived tokens with refresh rotation" }
+    ]
+  },
+  "commits": { "src/auth.py": "aa61cae" }
+}
+```
+
+Things people build on it: a CI bot that comments each PR with the origin story of
+the files it touches, provenance-aware RAG over your codebase, or "which files did
+we change for X?" scripts. It's also the substrate the roadmap MCP server will
+query. If you build something on it, open an issue — I'd love to see it.
+
 ## How the linking works
 
 - **Files**: extracted from `Edit`/`Write` tool calls (Claude Code) and `apply_patch` payloads (Codex)
