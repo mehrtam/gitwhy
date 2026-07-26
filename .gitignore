@@ -1,0 +1,7 @@
+﻿__pycache__/
+*.pyc
+test-workspace/
+test-workspace-old/
+bench-workspace/
+gitwhy-report.html
+BENCHMARK.md
