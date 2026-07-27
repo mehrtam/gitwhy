@@ -1,6 +1,8 @@
 # gitwhy
 ![tests](https://github.com/mehrtam/gitwhy/actions/workflows/tests.yml/badge.svg)
+
 [![Live Demo](https://img.shields.io/badge/Live_Demo-try_it_now-2ea44f)](https://mehrtam.github.io/gitwhy/)
+
 [![Understand--Anything](https://img.shields.io/badge/reads-Understand--Anything_graphs-6b94b8)](https://github.com/Egonex-AI/Understand-Anything)
 **`git blame` tells you who wrote the line. This tells you why.**
 
