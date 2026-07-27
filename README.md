@@ -1,5 +1,5 @@
 # gitwhy
-![tests](https://github.com/mehrtam/gitwhy/actions/workflows/tests.yml/badge.svg)
+![tests](https://github.com/mehrtam/gitwhy/actions/workflows/tests.yml/badge.svg) \n
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-try_it_now-2ea44f)](https://mehrtam.github.io/gitwhy/)
 
