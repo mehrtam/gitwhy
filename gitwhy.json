@@ -1,0 +1,65 @@
+{
+ "repo": "keystroke-decoder (demo data)",
+ "files": {
+  "train_v4.py": [
+   {
+    "date": "2026-07-24",
+    "agent": "claude",
+    "prompt": "the per-user calibration is overfitting — LOSO accuracy drops 14 points on unseen subjects. can we try adversarial training to strip subject identity from the features?"
+   },
+   {
+    "date": "2026-07-25",
+    "agent": "codex",
+    "prompt": "rolling EMA baseline for wrist posture — sessions drift within minutes, the fixed baseline from calibration is stale by minute 3"
+   }
+  ],
+  "models/dann.py": [
+   {
+    "date": "2026-07-24",
+    "agent": "claude",
+    "prompt": "the per-user calibration is overfitting — LOSO accuracy drops 14 points on unseen subjects. can we try adversarial training to strip subject identity from the features?"
+   }
+  ],
+  "features/posture.py": [
+   {
+    "date": "2026-07-25",
+    "agent": "codex",
+    "prompt": "rolling EMA baseline for wrist posture — sessions drift within minutes, the fixed baseline from calibration is stale by minute 3"
+   }
+  ],
+  "models/ood_gate.py": [
+   {
+    "date": "2026-07-26",
+    "agent": "claude",
+    "prompt": "add a Weibull-based OOD gate so the decoder abstains instead of guessing on out-of-distribution hand shapes"
+   }
+  ],
+  "eval/chrono.py": [
+   {
+    "date": "2026-07-26",
+    "agent": "claude",
+    "prompt": "add a Weibull-based OOD gate so the decoder abstains instead of guessing on out-of-distribution hand shapes"
+   },
+   {
+    "date": "2026-07-27",
+    "agent": "codex",
+    "prompt": "eval report generator — one HTML page per run with confusion matrix, per-subject LOSO table, drift curves"
+   }
+  ],
+  "eval/report.py": [
+   {
+    "date": "2026-07-27",
+    "agent": "codex",
+    "prompt": "eval report generator — one HTML page per run with confusion matrix, per-subject LOSO table, drift curves"
+   }
+  ]
+ },
+ "commits": {
+  "models/dann.py": "a3f9c21",
+  "train_v4.py": "a3f9c21",
+  "features/posture.py": "b7d0e55",
+  "eval/chrono.py": "c1a8f02",
+  "models/ood_gate.py": "c1a8f02",
+  "eval/report.py": "d9e4b77"
+ }
+}
