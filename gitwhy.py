@@ -230,9 +230,7 @@ def parse_any(path: Path):
     if path.name.startswith("rollout-"):
         return parse_codex_session(path)
     try:
-        # head = path.open(encoding="utf-8", errors="replace").readline()
-        with open(path, "r", encoding="utf-8", errors="replace") as f:
-            head = f.readline()
+        head = path.open(encoding="utf-8", errors="replace").readline()
     except Exception:
         return None
     if '"session_meta"' in head or '"response_item"' in head:
@@ -301,6 +299,52 @@ def archive():
     if saved == 0 and skipped == 0:
         print("[!] no transcripts found. Also set \"cleanupPeriodDays\": 3650 in "
               f"{CLAUDE_DIR / 'settings.json'} so future sessions survive.")
+
+# ------------------------- Understand-Anything integration -------------------------
+
+
+def load_ua_graph(repo: Path):
+    """Read a committed Understand-Anything knowledge graph if present.
+    Returns {rel_file_path: {layer, summary, functions:[...], classes:[...]}} or None.
+    Defensive: their schema may evolve; every field optional."""
+    for d in (".ua", ".understand-anything"):
+        p = repo / d / "knowledge-graph.json"
+        if p.exists():
+            try:
+                g = json.loads(p.read_text(encoding="utf-8", errors="replace"))
+            except Exception:
+                return None
+            nodes = g.get("nodes") or []
+            out = {}
+
+            def rel(fp):
+                if not fp:
+                    return None
+                return norm(fp).lstrip("/")
+            for n in nodes:
+                if not isinstance(n, dict):
+                    continue
+                ntype = n.get("type", "")
+                fp = n.get("filePath") or (n.get("id", "")[5:] if str(
+                    n.get("id", "")).startswith("file:") else None)
+                r = rel(fp)
+                if not r:
+                    continue
+                entry = out.setdefault(r, {"layer": None, "summary": None,
+                                           "functions": [], "classes": []})
+                if ntype == "file":
+                    entry["layer"] = n.get("layer") or entry["layer"]
+                    entry["summary"] = n.get("summary") or entry["summary"]
+                elif ntype in ("function", "method"):
+                    if n.get("name"):
+                        entry["functions"].append(n["name"])
+                elif ntype == "class":
+                    if n.get("name"):
+                        entry["classes"].append(n["name"])
+                if entry["layer"] is None and n.get("layer"):
+                    entry["layer"] = n.get("layer")
+            return {"files": out, "count": len(nodes), "dir": d} if out else None
+    return None
 
 # ------------------------- git -------------------------
 
@@ -435,9 +479,11 @@ def clip(txt, n=380):
     return txt[:n].rsplit(" ", 1)[0] + " …"
 
 
-def render(sessions, commits, links, repo_name, has_git):
+def render(sessions, commits, links, repo_name, has_git, ua=None):
     payload = {
         "repo": repo_name, "hasGit": has_git,
+        "ua": ({"count": ua["count"], "dir": ua["dir"],
+                "files": {f: ua["files"][f] for f in ua["files"]}} if ua else None),
         "sessions": [{"id": s["id"], "agent": s.get("agent", "claude"),
                       "start": s["start"].isoformat(), "n": s["n_msgs"],
                       "prompt": clip(s["prompts"][0][1] if s["prompts"] else ""),
@@ -458,10 +504,18 @@ def render(sessions, commits, links, repo_name, has_git):
 
 
 def report(repo: Path, demo=False):
+    ua = None
     if demo:
         sessions, commits = demo_data()
         links = link(sessions, commits, Path("."))
         name, has_git = "keystroke-decoder (demo data)", True
+        ua = {"count": 42, "dir": ".ua", "files": {
+            "models/dann.py": {"layer": "model", "summary": "Subject-adversarial branch: gradient-reversal head that strips subject identity from the encoder.",
+                               "functions": ["GradReverse.forward", "dann_lambda_schedule"], "classes": ["DANNHead"]},
+            "train_v4.py": {"layer": "training", "summary": "Main training loop with LOSO evaluation and checkpointing.",
+                            "functions": ["train_epoch", "evaluate_loso", "save_checkpoint"], "classes": []},
+            "eval/chrono.py": {"layer": "evaluation", "summary": "Chronological split evaluator exposing within-session drift.",
+                               "functions": ["windowed_accuracy", "drift_curve"], "classes": []}}}
     else:
         print("[*] scanning Claude Code transcripts (live + archive)…")
         sessions = find_sessions(repo)
@@ -477,19 +531,23 @@ def report(repo: Path, demo=False):
             relativize(s, repo)
         links = link(sessions, commits, repo) if commits else []
         name = repo.resolve().name
+        ua = load_ua_graph(repo)
+        if ua:
+            print(
+                f"[*] Understand-Anything graph found ({ua['dir']}, {ua['count']} nodes) \u2014 merging structure + provenance")
         if not sessions:
             print("[!] no sessions matched this folder. Tips: run `python gitwhy.py archive` first;"
                   " make sure you've used Claude Code inside this exact folder.")
     print(f"[*] {len(links)} session↔commit link(s)")
     out = (repo if repo.exists() else Path(".")) / "gitwhy-report.html"
     out.write_text(render(sessions, commits, links,
-                   name, has_git), encoding="utf-8")
+                   name, has_git, ua), encoding="utf-8")
     print(f"[✓] wrote {out.resolve()}")
     write_agent_context(repo if repo.exists() else Path(
-        "."), sessions, commits, links, name)
+        "."), sessions, commits, links, name, ua)
 
 
-def write_agent_context(base: Path, sessions, commits, links, name):
+def write_agent_context(base: Path, sessions, commits, links, name, ua=None):
     """Token-cheap provenance digest for coding agents (Claude Code, Codex, Cursor).
     Point the agent at GITWHY.md instead of letting it re-grep history."""
     cmap = {c["hash"][:7]: c for c in commits}
@@ -511,7 +569,9 @@ def write_agent_context(base: Path, sessions, commits, links, name):
              "Agents: read this before exploring; it replaces re-deriving intent from grep.",
              ""]
     for f in sorted(per_file):
-        lines.append(f"## {f}")
+        layer = (ua or {}).get("files", {}).get(
+            f, {}).get("layer") if ua else None
+        lines.append(f"## {f}" + (f"  \u00b7 layer: {layer}" if layer else ""))
         eps = sorted(per_file[f], key=lambda x: (x[0] is None, x[0]))
         seen_p = set()
         shown = 0
