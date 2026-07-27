@@ -25,8 +25,11 @@ def check(name, cond, detail=""):
 def ts(dt): return dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 def main():
-    import shutil
-    shutil.rmtree(WS, ignore_errors=True)
+    import shutil, stat
+    def onerr(fn, p, exc):  # windows leaves git objects read-only; clear and retry
+        try: os.chmod(p, stat.S_IWRITE); fn(p)
+        except Exception: pass
+    shutil.rmtree(WS, onerror=onerr)
     claude_dir = WS / "claude"; codex_dir = WS / "codex"; arch = WS / "arch"
     cproj = claude_dir / "projects" / "x"; cproj.mkdir(parents=True)
     xdir = codex_dir / "sessions" / "2026" / "07" / "26"; xdir.mkdir(parents=True)

@@ -155,7 +155,8 @@ deterministic core stays free and trustworthy underneath it.
 ## Tests
 
 ```bash
-python test_gitwhy.py    # builds Claude + Codex fixtures in a sandbox, 18 checks
+python test_gitwhy.py         # builds Claude + Codex fixtures in a sandbox, 18 checks
+python test_gitwhy_full.py -v # git-based unittest suite covering every behavior above, 44 checks
 ```
 
 ## License

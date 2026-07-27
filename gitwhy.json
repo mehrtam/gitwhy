@@ -1,0 +1,13 @@
+{
+ "repo": "gitwhy",
+ "files": {
+  "test_gitwhy_full.py": [
+   {
+    "date": "2026-07-27",
+    "agent": "claude",
+    "prompt": "<local-command-stdout>Goal set: make a full test suite that is following all the specifics that are explained in the readme of this project git-based, make a final report with what was going wrong …"
+   }
+  ]
+ },
+ "commits": {}
+}

@@ -189,7 +189,8 @@ def parse_any(path: Path):
     if path.name.startswith("rollout-"):
         return parse_codex_session(path)
     try:
-        head = path.open(encoding="utf-8", errors="replace").readline()
+        with path.open(encoding="utf-8", errors="replace") as f:
+            head = f.readline()
     except Exception:
         return None
     if '"session_meta"' in head or '"response_item"' in head:
