@@ -21,7 +21,7 @@
       --accent: #d4a259;
       --warm: #c97847;
       --cool: #8aa394;
-      --blue: #6b94b8;
+      --hot: #c14545;
       --serif: 'Fraunces', serif;
       --sans: 'Schibsted Grotesk', system-ui, sans-serif;
       --mono: 'JetBrains Mono', monospace;
@@ -52,9 +52,9 @@
     }
 
     .wrap {
-      max-width: 1060px;
+      max-width: 1240px;
       margin: 0 auto;
-      padding: 34px 22px 90px;
+      padding: 28px 22px 70px;
       position: relative
     }
 
@@ -64,7 +64,7 @@
       align-items: baseline;
       flex-wrap: wrap;
       gap: 10px;
-      margin-bottom: 8px
+      margin-bottom: 6px
     }
 
     .logo {
@@ -83,9 +83,9 @@
     h1 {
       font-family: var(--serif);
       font-weight: 550;
-      font-size: clamp(28px, 4.6vw, 42px);
-      line-height: 1.1;
-      margin: 6px 0 8px
+      font-size: clamp(24px, 3.6vw, 34px);
+      line-height: 1.12;
+      margin: 4px 0 14px
     }
 
     h1 em {
@@ -93,27 +93,21 @@
       color: var(--accent)
     }
 
-    .sub {
-      color: var(--dim);
-      margin-bottom: 34px;
-      max-width: 64ch
-    }
-
-    .sub code {
+    h1 code {
       font-family: var(--mono);
-      font-size: .9em;
-      color: var(--warm)
+      font-size: .82em;
+      color: var(--dim)
     }
 
     .stats {
       display: flex;
-      gap: 26px;
+      gap: 22px;
       flex-wrap: wrap;
       font-family: var(--mono);
       font-size: 12px;
       color: var(--faint);
       letter-spacing: .06em;
-      margin-bottom: 36px
+      margin-bottom: 20px
     }
 
     .stats b {
@@ -121,322 +115,69 @@
       font-weight: 500
     }
 
-    /* linkage board */
-    .board {
+    /* ─── unified stage: graph + panel ─── */
+    .stage {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr);
       gap: 1px;
       background: var(--rule);
-      border: 1px solid var(--rule);
-      margin-bottom: 44px
+      border: 1px solid var(--rule)
     }
 
-    .col {
+    .gside {
       background: var(--elev);
-      padding: 22px
-    }
-
-    .col .chead {
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      color: var(--faint);
-      margin-bottom: 16px;
-      display: flex;
-      justify-content: space-between
-    }
-
-    .node {
-      border: 1px solid var(--rule);
-      padding: 13px 15px;
-      margin-bottom: 10px;
-      cursor: pointer;
-      transition: all .2s;
-      position: relative
-    }
-
-    .node:hover {
-      border-color: var(--faint)
-    }
-
-    .node.hot {
-      border-color: var(--accent);
-      background: var(--surface)
-    }
-
-    .node .nid {
-      font-family: var(--mono);
-      font-size: 10.5px;
-      color: var(--faint);
-      letter-spacing: .06em;
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 5px
-    }
-
-    .node .nid .badge {
-      color: var(--cool)
-    }
-
-    .node .ntitle {
-      font-size: 13.5px;
-      color: var(--dim);
-      line-height: 1.45;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden
-    }
-
-    .node.hot .ntitle {
-      color: var(--ink)
-    }
-
-    /* blame view */
-    .blame h2 {
-      font-family: var(--serif);
-      font-size: 24px;
-      font-weight: 550;
-      margin-bottom: 6px
-    }
-
-    .blame h2 em {
-      color: var(--accent);
-      font-style: italic
-    }
-
-    .blame .hint {
-      color: var(--faint);
-      font-size: 13px;
-      margin-bottom: 18px;
-      font-family: var(--mono);
-      letter-spacing: .04em
-    }
-
-    .filepick {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 26px
-    }
-
-    .fchip {
-      font-family: var(--mono);
-      font-size: 12px;
-      border: 1px solid var(--rule);
-      background: transparent;
-      color: var(--dim);
-      padding: 8px 13px;
-      cursor: pointer;
-      transition: all .2s
-    }
-
-    .fchip:hover {
-      border-color: var(--faint)
-    }
-
-    .fchip.on {
-      border-color: var(--accent);
-      color: var(--accent)
-    }
-
-    .story {
-      border-left: 2px solid var(--accent);
-      padding: 0 0 0 24px;
-      display: none
-    }
-
-    .story.show {
-      display: block;
-      animation: up .35s cubic-bezier(.4, 0, .2, 1)
-    }
-
-    @keyframes up {
-      from {
-        opacity: 0;
-        transform: translateY(8px)
-      }
-
-      to {
-        opacity: 1;
-        transform: none
-      }
-    }
-
-    .epoch {
-      margin-bottom: 30px;
-      position: relative
-    }
-
-    .epoch::before {
-      content: '';
-      position: absolute;
-      left: -29px;
-      top: 8px;
-      width: 8px;
-      height: 8px;
-      background: var(--accent);
-      border-radius: 50%
-    }
-
-    .ewhen {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--faint);
-      letter-spacing: .08em;
-      margin-bottom: 8px
-    }
-
-    .ewhen .strong-link {
-      color: var(--cool)
-    }
-
-    .eprompt {
-      background: var(--elev);
-      border: 1px solid var(--rule);
-      padding: 16px 18px;
-      margin-bottom: 10px
-    }
-
-    .eprompt .plabel {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: var(--warm);
-      margin-bottom: 6px
-    }
-
-    .eprompt p {
-      font-family: var(--serif);
-      font-style: italic;
-      font-size: 16.5px;
-      line-height: 1.5;
-      color: var(--ink)
-    }
-
-    .eanswer {
-      padding: 12px 18px;
-      border: 1px solid var(--rule);
-      border-top: none;
-      background: var(--surface)
-    }
-
-    .eanswer .alabel {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: var(--cool);
-      margin-bottom: 6px
-    }
-
-    .eanswer p {
-      font-size: 13.5px;
-      color: var(--dim);
-      line-height: 1.6
-    }
-
-    .ecommit {
-      margin-top: 10px;
-      font-family: var(--mono);
-      font-size: 12px;
-      color: var(--dim)
-    }
-
-    .ecommit .h {
-      color: var(--accent)
-    }
-
-    .empty {
-      color: var(--faint);
-      font-family: var(--mono);
-      font-size: 13px;
-      padding: 30px 0
-    }
-
-    footer {
-      margin-top: 70px;
-      padding-top: 22px;
-      border-top: 1px solid var(--rule);
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--faint);
-      letter-spacing: .06em;
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 8px
-    }
-
-    footer a {
-      color: var(--accent);
-      text-decoration: none
-    }
-
-    @media(max-width:760px) {
-      .board {
-        grid-template-columns: 1fr
-      }
-    }
-
-    /* provenance graph */
-    .gwrap {
-      margin-bottom: 46px
-    }
-
-    .gwrap .ghead {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 14px
-    }
-
-    .gwrap h2 {
-      font-family: var(--serif);
-      font-size: 24px;
-      font-weight: 550
-    }
-
-    .gwrap h2 em {
-      color: var(--accent);
-      font-style: italic
-    }
-
-    .glegend {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--faint);
-      letter-spacing: .06em;
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap
-    }
-
-    .glegend .k {
-      display: inline-block;
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      margin-right: 6px;
-      vertical-align: middle
+      position: relative;
+      min-height: 540px
     }
 
     #graph {
       width: 100%;
-      height: 520px;
-      border: 1px solid var(--rule);
-      background: var(--elev);
-      cursor: grab;
+      height: 100%;
       display: block;
+      cursor: grab;
       touch-action: none
     }
 
     #graph:active {
       cursor: grabbing
+    }
+
+    .glegend {
+      position: absolute;
+      left: 14px;
+      top: 12px;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: var(--faint);
+      letter-spacing: .06em;
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      pointer-events: none;
+      background: rgba(12, 10, 8, .55);
+      padding: 6px 10px
+    }
+
+    .glegend .k {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle
+    }
+
+    .ghint {
+      position: absolute;
+      left: 14px;
+      bottom: 12px;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: var(--faint);
+      letter-spacing: .06em;
+      pointer-events: none;
+      background: rgba(12, 10, 8, .55);
+      padding: 6px 10px
     }
 
     .gtip {
@@ -453,6 +194,338 @@
       z-index: 10;
       line-height: 1.5
     }
+
+    /* panel */
+    .panel {
+      background: var(--elev);
+      padding: 24px 24px 28px;
+      overflow-y: auto;
+      max-height: calc(100vh - 60px);
+      min-height: 540px
+    }
+
+    .panel .pkind {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px
+    }
+
+    .panel .pkind .k-file {
+      color: var(--accent)
+    }
+
+    .panel .pkind .k-session {
+      color: var(--cool)
+    }
+
+    .panel .pkind .k-commit {
+      color: var(--warm)
+    }
+
+    .panel h2 {
+      font-family: var(--serif);
+      font-size: 21px;
+      font-weight: 550;
+      line-height: 1.25;
+      margin-bottom: 14px;
+      word-break: break-word
+    }
+
+    .panel h2 em {
+      color: var(--accent);
+      font-style: italic
+    }
+
+    .pmeta {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--faint);
+      letter-spacing: .05em;
+      margin-bottom: 16px;
+      line-height: 1.8
+    }
+
+    .epoch {
+      border-left: 2px solid var(--accent);
+      padding: 0 0 0 16px;
+      margin-bottom: 22px;
+      position: relative
+    }
+
+    .epoch::before {
+      content: '';
+      position: absolute;
+      left: -5px;
+      top: 6px;
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%
+    }
+
+    .ewhen {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: var(--faint);
+      letter-spacing: .08em;
+      margin-bottom: 7px
+    }
+
+    .ewhen .strong-link {
+      color: var(--cool)
+    }
+
+    .eprompt {
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      padding: 12px 14px;
+      margin-bottom: 8px
+    }
+
+    .eprompt .plabel,
+    .eanswer .alabel {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 5px
+    }
+
+    .eprompt .plabel {
+      color: var(--warm)
+    }
+
+    .eanswer .alabel {
+      color: var(--cool)
+    }
+
+    .eprompt p {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 14.5px;
+      line-height: 1.5
+    }
+
+    .eanswer {
+      padding: 10px 14px;
+      border: 1px solid var(--rule);
+      border-top: none;
+      background: var(--bg)
+    }
+
+    .eanswer p {
+      font-size: 13px;
+      color: var(--dim);
+      line-height: 1.6
+    }
+
+    .ecommit {
+      margin-top: 8px;
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--dim)
+    }
+
+    .ecommit .h {
+      color: var(--warm)
+    }
+
+    .linklist {
+      list-style: none;
+      margin-bottom: 16px
+    }
+
+    .linklist li {
+      margin-bottom: 6px
+    }
+
+    .pill {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 11.5px;
+      border: 1px solid var(--rule);
+      color: var(--dim);
+      padding: 5px 10px;
+      cursor: pointer;
+      transition: all .18s;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: middle
+    }
+
+    .pill:hover {
+      border-color: var(--accent);
+      color: var(--ink)
+    }
+
+    .pill .dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-right: 7px
+    }
+
+    .psec {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin: 16px 0 8px
+    }
+
+    .pempty {
+      color: var(--faint);
+      font-size: 14px;
+      line-height: 1.7
+    }
+
+    .pempty .big {
+      font-family: var(--serif);
+      font-size: 19px;
+      color: var(--dim);
+      display: block;
+      margin-bottom: 10px
+    }
+
+    .pquote {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 15px;
+      color: var(--ink);
+      line-height: 1.55;
+      border-left: 2px solid var(--cool);
+      padding-left: 14px;
+      margin-bottom: 16px
+    }
+
+    /* timeline */
+    .tl {
+      border: 1px solid var(--rule);
+      border-bottom: none;
+      background: var(--elev);
+      padding: 14px 18px 10px;
+      position: relative
+    }
+
+    .tl .tlabel {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between
+    }
+
+    .tlrow {
+      position: relative;
+      height: 16px;
+      margin-bottom: 6px
+    }
+
+    .tlrow .rl {
+      position: absolute;
+      left: 0;
+      top: 1px;
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--faint);
+      letter-spacing: .08em
+    }
+
+    .tldot {
+      position: absolute;
+      top: 4px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      cursor: pointer;
+      transform: translateX(-4px);
+      transition: transform .15s
+    }
+
+    .tldot:hover {
+      transform: translateX(-4px) scale(1.6)
+    }
+
+    .tlaxis {
+      height: 1px;
+      background: var(--rule);
+      margin: 4px 0 2px;
+      margin-left: 52px
+    }
+
+    .tlrow .lane {
+      position: absolute;
+      left: 52px;
+      right: 0;
+      top: 0;
+      bottom: 0
+    }
+
+    /* search */
+    .psearch {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--rule);
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 12.5px;
+      padding: 9px 12px;
+      outline: none;
+      margin-bottom: 12px
+    }
+
+    .psearch:focus {
+      border-color: var(--accent)
+    }
+
+    .pill .cnt {
+      color: var(--faint);
+      margin-left: 6px
+    }
+
+    footer {
+      margin-top: 34px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--faint);
+      letter-spacing: .06em;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none
+    }
+
+    @media(max-width:880px) {
+      .stage {
+        grid-template-columns: 1fr
+      }
+
+      .gside {
+        min-height: 420px
+      }
+
+      .panel {
+        min-height: auto;
+        max-height: none
+      }
+    }
   </style>
 </head>
 
@@ -462,47 +535,35 @@
       <div class="logo"><b>gitwhy</b> · provenance for AI-written code</div>
       <div class="logo" id="repoName"></div>
     </header>
-    <h1><code style="font-family:var(--mono);font-size:.85em;color:var(--dim)">git blame</code> tells you who. <em>This
-        tells you why.</em></h1>
-    <p class="sub">Every commit below is linked to the Claude Code conversation that produced it — recovered from the
-      session transcripts already sitting on this machine. Nothing was uploaded anywhere.</p>
+    <h1><code>git blame</code> tells you who. <em>This tells you why.</em></h1>
     <div class="stats" id="stats"></div>
 
-    <div class="board">
-      <div class="col">
-        <div class="chead"><span>AI sessions</span><span id="nSess"></span></div>
-        <div id="sessCol"></div>
+    <div class="tl" id="tl" style="display:none">
+      <div class="tlabel"><span>activity over time — click a dot</span><span id="tlRange"></span></div>
+      <div class="tlrow"><span class="rl">sessions</span>
+        <div class="lane" id="laneS"></div>
       </div>
-      <div class="col">
-        <div class="chead"><span>Git commits</span><span id="nComm"></span></div>
-        <div id="commCol"></div>
+      <div class="tlaxis"></div>
+      <div class="tlrow"><span class="rl">commits</span>
+        <div class="lane" id="laneC"></div>
       </div>
     </div>
-
-    <div class="gwrap">
-      <div class="ghead">
-        <h2>The <em>provenance graph</em></h2>
+    <div class="stage">
+      <div class="gside">
+        <canvas id="graph"></canvas>
         <div class="glegend">
           <span><span class="k" style="background:var(--cool)"></span>session (◈ claude · ◇ codex)</span>
           <span><span class="k" style="background:var(--warm)"></span>commit</span>
           <span><span class="k" style="background:var(--accent)"></span>file</span>
-          <span>drag nodes · click a file for its story</span>
         </div>
+        <div class="ghint">click any node · drag to rearrange</div>
+        <div class="gtip" id="gtip"></div>
       </div>
-      <canvas id="graph"></canvas>
-      <div class="gtip" id="gtip"></div>
-    </div>
-
-    <div class="blame">
-      <h2>Ask any file: <em>why do you exist?</em></h2>
-      <div class="hint">pick a file → its origin story, reconstructed from conversations</div>
-      <div class="filepick" id="filePick"></div>
-      <div class="story" id="story"></div>
-      <div class="empty" id="emptyMsg">Select a file above.</div>
+      <div class="panel" id="panel"></div>
     </div>
 
     <footer>
-      <div>gitwhy · v0.3 · runs 100% locally</div>
+      <div>gitwhy · v0.5 · runs 100% locally · nothing uploaded</div>
       <div>by <a href="https://mehrtam.github.io" target="_blank" rel="noopener">Mehrta Eslami</a></div>
     </footer>
   </div>
@@ -512,232 +573,335 @@
     const S = Object.fromEntries(DATA.sessions.map(s => [s.id, s]));
     const C = Object.fromEntries(DATA.commits.map(c => [c.hash, c]));
     const fmt = t => t ? new Date(t).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+    const fmtD = t => t ? new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
 
     document.getElementById('repoName').textContent = DATA.repo;
-    document.getElementById('nSess').textContent = DATA.sessions.length;
-    document.getElementById('nComm').textContent = DATA.commits.length;
-    const linkedCommits = new Set(DATA.links.map(l => l.c));
     const strong = DATA.links.filter(l => l.inside).length;
+    const provFiles = [...new Set(DATA.links.flatMap(l => l.overlap))];
+    const allFiles = [...new Set([...provFiles, ...DATA.sessions.flatMap(s => s.files)])].sort();
     document.getElementById('stats').innerHTML = DATA.hasGit
-      ? `<span><b>${DATA.sessions.length}</b> sessions parsed</span>` +
-      `<span><b>${DATA.links.length}</b> session↔commit links</span>` +
-      `<span><b>${strong}</b> commits made inside a session</span>` +
-      `<span><b>${[...new Set(DATA.links.flatMap(l => l.overlap))].length}</b> files with provenance</span>`
-      : `<span><b>${DATA.sessions.length}</b> sessions parsed</span>` +
-      `<span><b>${[...new Set(DATA.sessions.flatMap(s => s.files))].length}</b> files touched by AI</span>` +
-      `<span>no git history — session-only view</span>`;
+      ? `<span><b>${DATA.sessions.length}</b> AI sessions</span><span><b>${DATA.commits.length}</b> commits</span>` +
+      `<span><b>${DATA.links.length}</b> links</span><span><b>${strong}</b> commits made inside a session</span>` +
+      `<span><b>${provFiles.length}</b> files with provenance</span>`
+      : `<span><b>${DATA.sessions.length}</b> AI sessions</span><span><b>${allFiles.length}</b> files touched by AI</span>` +
+      `<span>no git history — run <b>git init</b> to link commits</span>`;
 
-    // board columns with hover cross-highlight
-    const sessCol = document.getElementById('sessCol'), commCol = document.getElementById('commCol');
-    DATA.sessions.forEach(s => {
-      const d = document.createElement('div'); d.className = 'node'; d.dataset.sid = s.id;
-      d.innerHTML = `<div class="nid"><span>${s.agent === 'codex' ? '◇ codex' : '◈ claude'} · ${s.id.slice(0, 12)}</span><span>${fmt(s.start)} · ${s.n} msgs</span></div>
-    <div class="ntitle" dir="auto">“${s.prompt || '(no prompt captured)'}”</div>`;
-      sessCol.appendChild(d);
-    });
-    DATA.commits.forEach(c => {
-      const d = document.createElement('div'); d.className = 'node'; d.dataset.cid = c.hash;
-      const linked = linkedCommits.has(c.hash);
-      d.innerHTML = `<div class="nid"><span class="${linked ? 'badge' : ''}">${linked ? '◆ linked' : '◇ unlinked'} · ${c.hash}</span><span>${fmt(c.time)}</span></div>
-    <div class="ntitle">${c.subject}</div>`;
-      commCol.appendChild(d);
-    });
-    if (!DATA.commits.length) {
-      const d = document.createElement('div'); d.className = 'node';
-      d.innerHTML = `<div class="nid"><span>◇ no git history</span></div>
-    <div class="ntitle">This folder isn't a git repo yet. Run <span style="font-family:var(--mono);color:var(--warm)">git init</span> and future sessions will link to real commits.</div>`;
-      commCol.appendChild(d);
+    /* activity metrics shared by panels + timeline */
+    const storyCount = {};    // file -> #stories
+    DATA.sessions.forEach(s => (s.stories || []).forEach(st => { storyCount[st.file] = (storyCount[st.file] || 0) + 1; }));
+    DATA.sessions.forEach(s => s.files.forEach(f => { if (!(f in storyCount)) storyCount[f] = Math.max(storyCount[f] || 0, 1); }));
+    function fileMeta(f) {
+      const ss = DATA.sessions.filter(s => s.files.includes(f) || (s.stories || []).some(st => st.file === f));
+      const ts = ss.map(s => +new Date(s.start)).filter(Boolean).sort((a, b) => a - b);
+      const agents = [...new Set(ss.map(s => s.agent || 'claude'))];
+      return { sessions: ss.length, first: ts[0], last: ts[ts.length - 1], agents };
     }
-    function related(el) {
-      const out = new Set();
-      if (el.dataset.sid) DATA.links.filter(l => l.s === el.dataset.sid).forEach(l => out.add('c:' + l.c));
-      if (el.dataset.cid) DATA.links.filter(l => l.c === el.dataset.cid).forEach(l => out.add('s:' + l.s));
-      return out;
+    /* ───────── panel: one place, everything connected ───────── */
+    const panel = document.getElementById('panel');
+    function pill(label, color, onclick, glyph) {
+      const b = document.createElement('button'); b.className = 'pill';
+      b.innerHTML = `<span class="dot" style="background:${color}"></span>${glyph ? glyph + ' ' : ''}`;
+      b.appendChild(document.createTextNode(label));
+      b.addEventListener('click', onclick);
+      return b;
     }
-    document.querySelectorAll('.node').forEach(n => {
-      n.addEventListener('mouseenter', () => {
-        const rel = related(n); n.classList.add('hot');
-        document.querySelectorAll('.node').forEach(m => {
-          if (m === n) return;
-          const k = m.dataset.sid ? ('s:' + m.dataset.sid) : ('c:' + m.dataset.cid);
-          m.classList.toggle('hot', rel.has(k));
-        });
-      });
-      n.addEventListener('mouseleave', () => document.querySelectorAll('.node').forEach(m => m.classList.remove('hot')));
-    });
-
-    // blame view — link-based when git exists, session-based otherwise
-    const files = DATA.links.length
-      ? [...new Set(DATA.links.flatMap(l => l.overlap))].sort()
-      : [...new Set(DATA.sessions.flatMap(s => s.files))].sort();
-    const pick = document.getElementById('filePick');
-    files.forEach(f => {
-      const b = document.createElement('button'); b.className = 'fchip'; b.textContent = f;
-      b.addEventListener('click', () => { document.querySelectorAll('.fchip').forEach(x => x.classList.remove('on')); b.classList.add('on'); tell(f); });
-      pick.appendChild(b);
-    });
-    function tell(f) {
-      const story = document.getElementById('story'); story.innerHTML = '';
-      document.getElementById('emptyMsg').style.display = 'none';
-      // preferred: fine-grained per-prompt stories from sessions
+    function fileStories(f) {
       let eps = DATA.sessions.flatMap(s =>
         (s.stories || []).filter(st => st.file === f).map(st => ({ t: st.t, prompt: st.prompt, reason: st.reason, sid: s.id })));
-      // fallback: one epoch per session that touched the file
-      if (!eps.length) {
-        eps = DATA.sessions.filter(s => s.files.includes(f))
-          .map(s => ({ t: s.start, prompt: s.prompt, reason: s.excerpt, sid: s.id }));
-      }
+      if (!eps.length) eps = DATA.sessions.filter(s => s.files.includes(f))
+        .map(s => ({ t: s.start, prompt: s.prompt, reason: s.excerpt, sid: s.id }));
       eps.sort((a, b) => new Date(a.t) - new Date(b.t));
-      // best commit for this file (from links), shown on the final epoch
+      return eps;
+    }
+    function bestCommitFor(f) {
       const lk = DATA.links.filter(l => l.overlap.includes(f)).sort((a, b) => b.score - a.score)[0];
-      const commit = lk ? C[lk.c] : null;
-      const inside = lk ? lk.inside : false;
+      return lk ? { c: C[lk.c], inside: lk.inside } : null;
+    }
+    function showFile(f) {
+      const m = fileMeta(f);
+      panel.innerHTML = `<div class="pkind"><span class="k-file">file · origin story</span></div>
+    <h2>${esc(f)} — <em>why do you exist?</em></h2>
+    <div class="pmeta">${m.sessions} session${m.sessions === 1 ? '' : 's'}${m.first ? ` · ${fmtD(m.first)}${m.last && m.last !== m.first ? ' → ' + fmtD(m.last) : ''}` : ''} · ${m.agents.join(' + ')}</div>`;
+      const eps = fileStories(f);
+      const bc = bestCommitFor(f);
+      if (!eps.length) { panel.insertAdjacentHTML('beforeend', '<p class="pempty">No recorded sessions touched this file.</p>'); return; }
       eps.forEach((e, i) => {
         const last = i === eps.length - 1;
         const d = document.createElement('div'); d.className = 'epoch';
-        d.innerHTML = `<div class="ewhen">${fmt(e.t)}${last && inside ? ' · <span class="strong-link">commit made inside this session</span>' : ''}</div>
-      <div class="eprompt"><div class="plabel">The human asked</div><p dir="auto">“${e.prompt}”</p></div>
-      ${e.reason ? `<div class="eanswer"><div class="alabel">The agent reasoned</div><p dir="auto">${e.reason}</p></div>` : ''}
-      ${last && commit ? `<div class="ecommit">→ <span class="h">${commit.hash}</span> ${commit.subject}</div>` : ''}`;
-        story.appendChild(d);
+        d.innerHTML = `<div class="ewhen">${fmt(e.t)}${last && bc && bc.inside ? ' · <span class="strong-link">commit made inside this session</span>' : ''}</div>
+      <div class="eprompt"><div class="plabel">You asked</div><p dir="auto">“${esc(e.prompt)}”</p></div>
+      ${e.reason ? `<div class="eanswer"><div class="alabel">The agent reasoned</div><p dir="auto">${esc(e.reason)}</p></div>` : ''}
+      ${last && bc && bc.c ? `<div class="ecommit">→ <span class="h">${bc.c.hash}</span> ${esc(bc.c.subject)}</div>` : ''}`;
+        d.querySelector('.ewhen').style.cursor = 'pointer';
+        panel.appendChild(d);
       });
-      story.classList.add('show');
     }
-    // ─── provenance graph: custom force layout, zero dependencies ───
+    function showSession(id) {
+      const s = S[id]; if (!s) return;
+      const glyph = s.agent === 'codex' ? '◇' : '◈';
+      panel.innerHTML = `<div class="pkind"><span class="k-session">${glyph} ${esc(s.agent || 'claude')} session</span><span>${fmt(s.start)} · ${s.n} msgs</span></div>
+    <h2>What this session was <em>about</em></h2>
+    <p class="pquote" dir="auto">“${esc(s.prompt || '(no prompt captured)')}”</p>`;
+      if (s.excerpt) panel.insertAdjacentHTML('beforeend',
+        `<div class="eanswer" style="border-top:1px solid var(--rule);margin-bottom:16px"><div class="alabel">The agent reasoned</div><p dir="auto">${esc(s.excerpt)}</p></div>`);
+      const files = [...new Set(s.files)].sort();
+      if (files.length) {
+        panel.insertAdjacentHTML('beforeend', '<div class="psec">Files it touched — click one</div>');
+        const ul = document.createElement('ul'); ul.className = 'linklist';
+        files.forEach(f => { const li = document.createElement('li'); li.appendChild(pill(f, 'var(--accent)', () => select('f:' + f))); ul.appendChild(li); });
+        panel.appendChild(ul);
+      }
+      const cs = DATA.links.filter(l => l.s === id).map(l => C[l.c]).filter(Boolean);
+      if (cs.length) {
+        panel.insertAdjacentHTML('beforeend', '<div class="psec">Commits it produced</div>');
+        const ul = document.createElement('ul'); ul.className = 'linklist';
+        cs.forEach(c => { const li = document.createElement('li'); li.appendChild(pill(`${c.hash} · ${c.subject}`, 'var(--warm)', () => select('c:' + c.hash))); ul.appendChild(li); });
+        panel.appendChild(ul);
+      }
+    }
+    function showCommit(h) {
+      const c = C[h]; if (!c) return;
+      panel.innerHTML = `<div class="pkind"><span class="k-commit">commit ${esc(c.hash)}</span><span>${fmt(c.time)}</span></div>
+    <h2 dir="auto">${esc(c.subject)}</h2>`;
+      const ls = DATA.links.filter(l => l.c === h);
+      const sess = ls.map(l => S[l.s]).filter(Boolean)[0];
+      if (sess) {
+        panel.insertAdjacentHTML('beforeend', '<div class="psec">Born in this session</div>');
+        const ul = document.createElement('ul'); ul.className = 'linklist';
+        const li = document.createElement('li');
+        li.appendChild(pill(`${fmtD(sess.start)} · "${(sess.prompt || '').slice(0, 60)}"`, 'var(--cool)', () => select('s:' + sess.id), sess.agent === 'codex' ? '◇' : '◈'));
+        ul.appendChild(li); panel.appendChild(ul);
+        if (ls[0].inside) panel.insertAdjacentHTML('beforeend', '<div class="ewhen" style="margin-bottom:14px"><span class="strong-link">✓ git commit ran inside the session — near-certain link</span></div>');
+      } else {
+        panel.insertAdjacentHTML('beforeend', '<p class="pempty">No AI session linked to this commit (made outside recorded sessions, or its transcript is gone).</p>');
+      }
+      if (c.files && c.files.length) {
+        panel.insertAdjacentHTML('beforeend', '<div class="psec">Files in this commit</div>');
+        const ul = document.createElement('ul'); ul.className = 'linklist';
+        c.files.forEach(f => { const li = document.createElement('li'); li.appendChild(pill(f, 'var(--accent)', () => select('f:' + f))); ul.appendChild(li); });
+        panel.appendChild(ul);
+      }
+    }
+    function showHome() {
+      const times = DATA.sessions.map(s => +new Date(s.start)).filter(Boolean).sort((a, b) => a - b);
+      const agents = DATA.sessions.reduce((m, s) => { const a = s.agent || 'claude'; m[a] = (m[a] || 0) + 1; return m; }, {});
+      const agentStr = Object.entries(agents).map(([a, n]) => `${n} ${a}`).join(' · ');
+      panel.innerHTML = `<div class="pkind"><span class="k-file">overview</span></div>
+    <h2>This project's <em>why</em>, at a glance</h2>
+    <div class="pmeta">${times.length ? `worked on ${fmtD(times[0])} → ${fmtD(times[times.length - 1])}<br>` : ''}${agentStr}${DATA.hasGit ? ` · ${strong} of ${DATA.links.length} links are near-certain` : ''}</div>`;
+      if (!allFiles.length) {
+        panel.insertAdjacentHTML('beforeend', `<p class="pempty"><span class="big">No sessions found for this folder.</span>
+      Run <b>python gitwhy.py archive</b>, use Claude Code or Codex here, then re-run gitwhy.</p>`);
+        return;
+      }
+      const inp = document.createElement('input'); inp.className = 'psearch'; inp.placeholder = 'filter files…';
+      panel.appendChild(inp);
+      panel.insertAdjacentHTML('beforeend', '<div class="psec">Files by activity — click one</div>');
+      const ul = document.createElement('ul'); ul.className = 'linklist'; panel.appendChild(ul);
+      const ranked = allFiles.slice().sort((a, b) => (storyCount[b] || 0) - (storyCount[a] || 0));
+      function renderList(q) {
+        ul.innerHTML = '';
+        ranked.filter(f => !q || f.toLowerCase().includes(q)).forEach(f => {
+          const li = document.createElement('li');
+          const p = pill(f, 'var(--accent)', () => select('f:' + f));
+          p.insertAdjacentHTML('beforeend', `<span class="cnt">· ${storyCount[f] || 0} ${(storyCount[f] || 0) === 1 ? 'story' : 'stories'}</span>`);
+          li.appendChild(p); ul.appendChild(li);
+        });
+      }
+      renderList('');
+      inp.addEventListener('input', () => renderList(inp.value.trim().toLowerCase()));
+    }
+    function esc(x) { const d = document.createElement('div'); d.textContent = x == null ? '' : String(x); return d.innerHTML; }
+
+    /* selection — shared between panel and graph */
+    let selectedId = null, selectHook = null;
+    function select(id) {
+      selectedId = id;
+      if (!id) { showHome(); if (selectHook) selectHook(null); return; }
+      if (id.startsWith('f:')) showFile(id.slice(2));
+      else if (id.startsWith('s:')) showSession(id.slice(2));
+      else if (id.startsWith('c:')) showCommit(id.slice(2));
+      addBack();
+      if (selectHook) selectHook(id);
+    }
+    function addBack() {
+      const b = document.createElement('button'); b.className = 'pill'; b.style.marginBottom = '14px';
+      b.textContent = '← overview';
+      b.addEventListener('click', () => select(null));
+      panel.insertBefore(b, panel.firstChild);
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') select(null); });
+    window.gwSelect = select;
+    showHome();
+
+    /* ───────── timeline strip ───────── */
     (function () {
-      const canvas = document.getElementById('graph'); if (!canvas) return;
-      const tip = document.getElementById('gtip');
-      const css = getComputedStyle(document.documentElement);
-      const COL = { session: '#8aa394', commit: '#c97847', file: '#d4a259', edge: 'rgba(184,173,151,.16)', edgeHot: '#d4a259', label: '#b8ad97' };
-      let W, H, dpr;
-      function resize() {
-        dpr = window.devicePixelRatio || 1; W = canvas.clientWidth; H = 520;
-        canvas.width = W * dpr; canvas.height = H * dpr;
-      }
-      resize(); window.addEventListener('resize', () => { resize(); });
-      const ctx = canvas.getContext && canvas.getContext('2d'); if (!ctx) { canvas.parentElement.style.display = 'none'; return; }
-
-      // build nodes + edges
-      const nodes = [], edges = [], byId = {};
-      function addNode(id, type, label, meta) {
-        if (byId[id]) return byId[id];
-        const n = {
-          id, type, label, meta, x: W / 2 + (Math.random() - .5) * W * .7, y: H / 2 + (Math.random() - .5) * H * .7, vx: 0, vy: 0,
-          r: type === 'file' ? 6 : type === 'commit' ? 7 : 9, deg: 0
-        };
-        byId[id] = n; nodes.push(n); return n;
-      }
-      function addEdge(a, b, hot) { edges.push({ a, b, hot: !!hot }); a.deg++; b.deg++; }
-
-      DATA.sessions.forEach(s => {
-        const glyph = s.agent === 'codex' ? '◇' : '◈';
-        const sn = addNode('s:' + s.id, 'session', glyph + ' ' + s.id.slice(0, 10), (s.agent || 'claude') + ' · ' + s.prompt);
-        s.files.forEach(f => addEdge(sn, addNode('f:' + f, 'file', f, f)));
+      const evts = [
+        ...DATA.sessions.filter(s => s.start).map(s => ({ t: +new Date(s.start), id: 's:' + s.id, col: 'var(--cool)', tip: (s.agent || 'claude') + ' session · ' + fmtD(s.start) + ' · "' + (s.prompt || '').slice(0, 70) + '"' })),
+        ...DATA.commits.filter(c => c.time).map(c => ({ t: +new Date(c.time), id: 'c:' + c.hash, col: 'var(--warm)', tip: 'commit ' + c.hash + ' · ' + c.subject.slice(0, 70) }))
+      ];
+      if (evts.length < 2) return;
+      const lo = Math.min(...evts.map(e => e.t)), hi = Math.max(...evts.map(e => e.t));
+      const span = Math.max(1, hi - lo);
+      document.getElementById('tl').style.display = 'block';
+      document.getElementById('tlRange').textContent = fmtD(lo) + ' — ' + fmtD(hi);
+      const laneS = document.getElementById('laneS'), laneC = document.getElementById('laneC');
+      evts.forEach(e => {
+        const d = document.createElement('div'); d.className = 'tldot';
+        d.style.left = (3 + ((e.t - lo) / span) * 94) + '%';
+        d.style.background = e.col;
+        d.title = e.tip;
+        d.addEventListener('click', () => select(e.id));
+        (e.id[0] === 's' ? laneS : laneC).appendChild(d);
       });
-      DATA.links.forEach(l => {
-        const sn = byId['s:' + l.s], c = C[l.c];
-        if (!sn || !c) return;
-        const cn = addNode('c:' + l.c, 'commit', l.c, c.subject);
-        addEdge(sn, cn, l.inside);
-        l.overlap.forEach(f => { const fn = byId['f:' + f]; if (fn) addEdge(cn, fn); });
-      });
-      if (!nodes.length) { canvas.parentElement.style.display = 'none'; return; }
+    })();
 
-      // physics
-      let cooling = 1, dragging = null, hover = null;
-      function tick() {
-        // repulsion (O(n^2) fine up to ~400 nodes)
-        for (let i = 0; i < nodes.length; i++)for (let j = i + 1; j < nodes.length; j++) {
-          const a = nodes[i], b = nodes[j];
-          let dx = a.x - b.x, dy = a.y - b.y, d2 = dx * dx + dy * dy || 1;
-          if (d2 < 40000) { const f = 1400 / d2; dx *= f; dy *= f; a.vx += dx; a.vy += dy; b.vx -= dx; b.vy -= dy; }
+    /* ───────── graph: the map ───────── */
+    (function () {
+      try {
+        const canvas = document.getElementById('graph');
+        const ctx = canvas.getContext && canvas.getContext('2d');
+        if (!ctx) { return; }
+        const tip = document.getElementById('gtip');
+        const COL = { session: '#8aa394', commit: '#c97847', file: '#d4a259', edge: 'rgba(184,173,151,.16)', edgeHot: '#d4a259', label: '#b8ad97', ring: '#ede5d4' };
+        let W, H, dpr;
+        function resize() {
+          dpr = window.devicePixelRatio || 1;
+          const nw = canvas.clientWidth || 800, nh = canvas.clientHeight || 540;
+          const changed = nw !== W || nh !== H;
+          W = nw; H = nh; canvas.width = W * dpr; canvas.height = H * dpr;
+          if (changed) wake();
         }
-        // springs
-        edges.forEach(e => {
-          let dx = e.b.x - e.a.x, dy = e.b.y - e.a.y, d = Math.sqrt(dx * dx + dy * dy) || 1;
-          const f = (d - 90) * 0.004; dx = dx / d * f; dy = dy / d * f;
-          e.a.vx += dx * d; e.a.vy += dy * d; e.b.vx -= dx * d; e.b.vy -= dy * d;
-        });
-        // centering + integrate
-        nodes.forEach(n => {
-          n.vx += (W / 2 - n.x) * 0.0015; n.vy += (H / 2 - n.y) * 0.0015;
-          if (n !== dragging) { n.x += n.vx * cooling; n.y += n.vy * cooling; }
-          n.vx *= 0.86; n.vy *= 0.86;
-          n.x = Math.max(20, Math.min(W - 20, n.x)); n.y = Math.max(20, Math.min(H - 20, n.y));
-        });
-        cooling = Math.max(0.12, cooling * 0.995);
-      }
-      function nbrs(n) {
-        const set = new Set([n]);
-        edges.forEach(e => { if (e.a === n) set.add(e.b); if (e.b === n) set.add(e.a); }); return set;
-      }
-      function draw() {
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
-        const hi = hover ? nbrs(hover) : null;
-        edges.forEach(e => {
-          const hot = hi && hi.has(e.a) && hi.has(e.b);
-          ctx.strokeStyle = hot ? COL.edgeHot : COL.edge; ctx.lineWidth = hot ? 1.4 : 1;
-          ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y); ctx.stroke();
-        });
-        nodes.forEach(n => {
-          const dim = hi && !hi.has(n);
-          ctx.globalAlpha = dim ? 0.25 : 1;
-          ctx.fillStyle = COL[n.type];
-          ctx.beginPath(); ctx.arc(n.x, n.y, n.r + Math.min(4, n.deg * 0.4), 0, 7); ctx.fill();
-          ctx.globalAlpha = 1;
-        });
-        // label pass: collision-aware, high-priority first
-        ctx.font = '10px JetBrains Mono, monospace';
-        const boxes = [];
-        const cand = nodes.slice().sort((a, b) => {
-          const pa = (hi && hi.has(a) ? 1000 : 0) + a.deg, pb = (hi && hi.has(b) ? 1000 : 0) + b.deg;
-          return pb - pa;
-        });
-        cand.forEach(n => {
-          if (hi && !hi.has(n)) return;
-          if (!(hi && hi.has(n)) && n.type === 'file' && n.deg < 2 && nodes.length >= 40) return;
-          const txt = n.label.length > 26 ? n.label.slice(0, 24) + '…' : n.label;
-          const w = ctx.measureText(txt).width, x = n.x + n.r + 6, y = n.y + 3;
-          const box = [x - 2, y - 10, w + 4, 13];
-          if (boxes.some(b => !(box[0] > b[0] + b[2] || b[0] > box[0] + box[2] || box[1] > b[1] + b[3] || b[1] > box[1] + box[3]))) return;
-          boxes.push(box);
-          ctx.fillStyle = COL.label;
-          ctx.fillText(txt, x, y);
-        });
-      }
-      (function loop() { tick(); draw(); requestAnimationFrame(loop); })();
-
-      // interaction
-      function pick(mx, my) {
-        let best = null, bd = 18 * 18;
-        nodes.forEach(n => { const d = (n.x - mx) ** 2 + (n.y - my) ** 2; if (d < bd) { bd = d; best = n; } }); return best;
-      }
-      function pos(ev) {
-        const r = canvas.getBoundingClientRect();
-        const p = ev.touches ? ev.touches[0] : ev; return [p.clientX - r.left, p.clientY - r.top, p.clientX, p.clientY];
-      }
-      canvas.addEventListener('pointermove', ev => {
-        const [mx, my, cx, cy] = pos(ev);
-        if (dragging) { dragging.x = mx; dragging.y = my; cooling = Math.max(cooling, 0.5); return; }
-        hover = pick(mx, my);
-        if (hover) {
-          tip.style.display = 'block'; tip.style.left = (cx + 14) + 'px'; tip.style.top = (cy + 14) + 'px';
-          tip.textContent = (hover.type === 'session' ? 'session · "' : hover.type === 'commit' ? 'commit · ' : 'file · ') +
-            (hover.meta || hover.label) + (hover.type === 'session' ? '"' : '');
-        } else tip.style.display = 'none';
-      });
-      canvas.addEventListener('pointerdown', ev => {
-        const [mx, my] = pos(ev); dragging = pick(mx, my);
-        if (dragging) canvas.setPointerCapture(ev.pointerId);
-      });
-      canvas.addEventListener('pointerup', ev => {
-        if (dragging && dragging.type === 'file') {
-          const chip = [...document.querySelectorAll('.fchip')].find(c => c.textContent === dragging.label);
-          if (chip) { chip.click(); chip.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+        let cooling = 1, dragging = null, hover = null, asleep = false;
+        function wake() { cooling = Math.max(cooling || 0, 0.55); asleep = false; }
+        const nodes = [], edges = [], byId = {};
+        function addNode(id, type, label, meta) {
+          if (byId[id]) return byId[id];
+          const n = { id, type, label, meta, x: 0, y: 0, vx: 0, vy: 0, r: type === 'file' ? 6 : type === 'commit' ? 7 : 9, deg: 0 };
+          byId[id] = n; nodes.push(n); return n;
         }
-        dragging = null;
-      });
-      canvas.addEventListener('pointerleave', () => { hover = null; tip.style.display = 'none'; });
+        function addEdge(a, b, hot) { edges.push({ a, b, hot: !!hot }); a.deg++; b.deg++; }
+        DATA.sessions.forEach(s => {
+          const glyph = s.agent === 'codex' ? '◇' : '◈';
+          const sn = addNode('s:' + s.id, 'session', glyph + ' ' + (s.start ? fmtD(s.start) : s.id.slice(0, 8)), (s.agent || 'claude') + ' · ' + s.prompt);
+          s.files.forEach(f => addEdge(sn, addNode('f:' + f, 'file', f, f)));
+        });
+        DATA.links.forEach(l => {
+          const sn = byId['s:' + l.s], c = C[l.c]; if (!sn || !c) return;
+          const cn = addNode('c:' + l.c, 'commit', l.c, c.subject);
+          addEdge(sn, cn, l.inside);
+          l.overlap.forEach(f => { const fn = byId['f:' + f]; if (fn) addEdge(cn, fn); });
+        });
+        if (!nodes.length) { canvas.parentElement.querySelector('.ghint').textContent = 'no data to draw yet'; return; }
+
+        resize(); window.addEventListener('resize', resize);
+        nodes.forEach(n => { n.x = W / 2 + (Math.random() - .5) * W * .7; n.y = H / 2 + (Math.random() - .5) * H * .7; });
+        const REP = 1400 * Math.min(1, 140 / nodes.length);
+
+        /* physics: settles and STOPS; drag/resize wakes it */
+        function tick() {
+          for (let i = 0; i < nodes.length; i++)for (let j = i + 1; j < nodes.length; j++) {
+            const a = nodes[i], b = nodes[j];
+            let dx = a.x - b.x, dy = a.y - b.y, d2 = dx * dx + dy * dy || 1;
+            if (d2 < 40000) { const f = REP / d2; dx *= f; dy *= f; a.vx += dx; a.vy += dy; b.vx -= dx; b.vy -= dy; }
+          }
+          edges.forEach(e => {
+            let dx = e.b.x - e.a.x, dy = e.b.y - e.a.y, d = Math.sqrt(dx * dx + dy * dy) || 1;
+            const f = (d - 90) * 0.004; dx = dx / d * f; dy = dy / d * f;
+            e.a.vx += dx * d; e.a.vy += dy * d; e.b.vx -= dx * d; e.b.vy -= dy * d;
+          });
+          let energy = 0;
+          nodes.forEach(n => {
+            n.vx += (W / 2 - n.x) * 0.0015; n.vy += (H / 2 - n.y) * 0.0015;
+            if (n !== dragging) { n.x += n.vx * cooling; n.y += n.vy * cooling; }
+            n.vx *= 0.86; n.vy *= 0.86;
+            n.x = Math.max(20, Math.min(W - 20, n.x)); n.y = Math.max(20, Math.min(H - 20, n.y));
+            energy += Math.abs(n.vx) + Math.abs(n.vy);
+          });
+          cooling *= 0.992;
+          if (cooling < 0.02 || energy / nodes.length < 0.03) asleep = true;
+        }
+        function nbrs(n) {
+          const set = new Set([n]);
+          edges.forEach(e => { if (e.a === n) set.add(e.b); if (e.b === n) set.add(e.a); }); return set;
+        }
+        function draw() {
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+          const sel = selectedId ? byId[selectedId] : null;
+          const hi = (hover || sel) ? nbrs(hover || sel) : null;
+          edges.forEach(e => {
+            const hot = hi && hi.has(e.a) && hi.has(e.b);
+            ctx.strokeStyle = hot ? COL.edgeHot : COL.edge; ctx.lineWidth = hot ? 1.4 : 1;
+            ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y); ctx.stroke();
+          });
+          nodes.forEach(n => {
+            const dim = hi && !hi.has(n);
+            ctx.globalAlpha = dim ? 0.22 : 1;
+            if (n === sel) {
+              ctx.strokeStyle = COL.ring; ctx.lineWidth = 1.5;
+              ctx.beginPath(); ctx.arc(n.x, n.y, n.r + Math.min(4, n.deg * 0.4) + 4, 0, 7); ctx.stroke();
+            }
+            ctx.fillStyle = COL[n.type];
+            ctx.beginPath(); ctx.arc(n.x, n.y, n.r + Math.min(4, n.deg * 0.4), 0, 7); ctx.fill();
+            ctx.globalAlpha = 1;
+          });
+          ctx.font = '10px JetBrains Mono, monospace';
+          const boxes = [];
+          const cand = nodes.slice().sort((a, b) => {
+            const pa = (a === sel ? 2000 : 0) + (hi && hi.has(a) ? 1000 : 0) + a.deg, pb = (b === sel ? 2000 : 0) + (hi && hi.has(b) ? 1000 : 0) + b.deg;
+            return pb - pa;
+          });
+          cand.forEach(n => {
+            if (hi && !hi.has(n) && n !== sel) return;
+            if (!(hi && hi.has(n)) && n !== sel && n.type === 'file' && n.deg < 2 && nodes.length >= 40) return;
+            const txt = n.label.length > 26 ? n.label.slice(0, 24) + '…' : n.label;
+            const w = ctx.measureText(txt).width, x = n.x + n.r + 6, y = n.y + 3;
+            const box = [x - 2, y - 10, w + 4, 13];
+            if (boxes.some(b => !(box[0] > b[0] + b[2] || b[0] > box[0] + box[2] || box[1] > b[1] + b[3] || b[1] > box[1] + box[3]))) return;
+            boxes.push(box);
+            ctx.fillStyle = COL.label; ctx.fillText(txt, x, y);
+          });
+        }
+        (function loop() { if (!asleep || dragging) tick(); draw(); requestAnimationFrame(loop); })();
+
+        function pick(mx, my) {
+          let best = null, bd = 18 * 18;
+          nodes.forEach(n => { const d = (n.x - mx) ** 2 + (n.y - my) ** 2; if (d < bd) { bd = d; best = n; } }); return best;
+        }
+        function pos(ev) {
+          const r = canvas.getBoundingClientRect();
+          const p = ev.touches ? ev.touches[0] : ev; return [p.clientX - r.left, p.clientY - r.top, p.clientX, p.clientY];
+        }
+        let moved = false;
+        canvas.addEventListener('pointermove', ev => {
+          const [mx, my, cx, cy] = pos(ev);
+          if (dragging) { moved = true; dragging.x = mx; dragging.y = my; wake(); return; }
+          hover = pick(mx, my);
+          if (hover) {
+            tip.style.display = 'block'; tip.style.left = (cx + 14) + 'px'; tip.style.top = (cy + 14) + 'px';
+            tip.textContent = (hover.type === 'session' ? 'session · "' : hover.type === 'commit' ? 'commit · ' : 'file · ') +
+              (hover.meta || hover.label) + (hover.type === 'session' ? '"' : '');
+          } else tip.style.display = 'none';
+        });
+        canvas.addEventListener('pointerdown', ev => {
+          const [mx, my] = pos(ev);
+          dragging = pick(mx, my); moved = false;
+          if (dragging) canvas.setPointerCapture(ev.pointerId);
+        });
+        document.querySelector('.ghint').textContent = 'click a node · click empty space to go back · drag to rearrange';
+        canvas.addEventListener('pointerup', ev => {
+          if (!moved) {
+            if (dragging) select(dragging.id);          // click a node = open its story
+            else select(null);                          // click empty space = back to overview
+          }
+          dragging = null;
+        });
+        canvas.addEventListener('pointerleave', () => { hover = null; tip.style.display = 'none'; });
+        selectHook = () => { };   // selection only changes highlighting; draw loop picks it up — no physics
+      } catch (err) {
+        const h = document.querySelector('.ghint');
+        if (h) { h.textContent = 'graph error: ' + err.message; h.style.color = 'var(--hot)'; }
+      }
     })();
   </script>
 </body>
