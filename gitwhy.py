@@ -14,7 +14,13 @@ Usage:
 
 Output: gitwhy-report.html. Stdlib only. Nothing leaves your machine.
 """
-import json, os, re, shutil, subprocess, sys, html
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import html
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -25,20 +31,28 @@ except Exception:
     pass
 
 EDIT_TOOLS = {"Edit", "Write", "MultiEdit", "NotebookEdit"}
-NOISE = re.compile(r"api error|/login|oauth|traceback|exit code \d|^error\b|fatal:", re.I)
-CLI_PROMPT = re.compile(r"^(/\S+|claude(\s+\S+)?|exit|clear|help|y|yes|n|no|ok)\s*$", re.I)
+NOISE = re.compile(
+    r"api error|/login|oauth|traceback|exit code \d|^error\b|fatal:", re.I)
+CLI_PROMPT = re.compile(
+    r"^(/\S+|claude(\s+\S+)?|exit|clear|help|y|yes|n|no|ok)\s*$", re.I)
 SLACK_MIN = 45
 CLAUDE_DIR = Path(os.environ.get("CLAUDE_DIR", Path.home() / ".claude"))
 CODEX_DIR = Path(os.environ.get("CODEX_DIR", Path.home() / ".codex"))
 PATCH_FILE = re.compile(r"\*\*\*\s+(?:Update|Add)\s+File:\s*([^\n\\\"]+)")
-ARCHIVE_DIR = Path(os.environ.get("GITWHY_ARCHIVE", Path.home() / ".gitwhy" / "archive"))
+ARCHIVE_DIR = Path(os.environ.get(
+    "GITWHY_ARCHIVE", Path.home() / ".gitwhy" / "archive"))
 
 # ------------------------- session parsing -------------------------
 
+
 def iso(ts):
-    if not ts: return None
-    try: return datetime.fromisoformat(ts.replace("Z", "+00:00"))
-    except Exception: return None
+    if not ts:
+        return None
+    try:
+        return datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    except Exception:
+        return None
+
 
 def parse_session(path: Path):
     """Defensively parse one session JSONL. Every field is optional."""
@@ -53,19 +67,26 @@ def parse_session(path: Path):
         return None
     for line in lines:
         line = line.strip()
-        if not line: continue
-        try: rec = json.loads(line)
-        except Exception: continue
-        if not isinstance(rec, dict): continue
+        if not line:
+            continue
+        try:
+            rec = json.loads(line)
+        except Exception:
+            continue
+        if not isinstance(rec, dict):
+            continue
         t = iso(rec.get("timestamp"))
         if t:
             s["start"] = min(s["start"], t) if s["start"] else t
             s["end"] = max(s["end"], t) if s["end"] else t
-        if rec.get("cwd"): s["cwd"] = rec["cwd"]
-        if rec.get("gitBranch"): s["branches"].add(rec["gitBranch"])
+        if rec.get("cwd"):
+            s["cwd"] = rec["cwd"]
+        if rec.get("gitBranch"):
+            s["branches"].add(rec["gitBranch"])
         msg = rec.get("message") or {}
         role, content = msg.get("role"), msg.get("content")
-        if rec.get("type") in ("user", "assistant"): s["n_msgs"] += 1
+        if rec.get("type") in ("user", "assistant"):
+            s["n_msgs"] += 1
         if role == "user" and not rec.get("isMeta"):
             texts = []
             if isinstance(content, str) and content.strip():
@@ -74,12 +95,14 @@ def parse_session(path: Path):
                 texts = [b["text"].strip() for b in content
                          if isinstance(b, dict) and b.get("type") == "text" and b.get("text", "").strip()]
             for txt in texts:
-                if NOISE.search(txt[:120]) or CLI_PROMPT.match(txt) or len(txt) < 20: continue
+                if NOISE.search(txt[:120]) or CLI_PROMPT.match(txt) or len(txt) < 20:
+                    continue
                 s["prompts"].append((t, txt))
                 last_prompt, last_reason = txt, None
         if isinstance(content, list):
             for b in content:
-                if not isinstance(b, dict): continue
+                if not isinstance(b, dict):
+                    continue
                 if b.get("type") == "tool_use":
                     name, inp = b.get("name", ""), b.get("input") or {}
                     if name in EDIT_TOOLS and isinstance(inp, dict):
@@ -100,7 +123,8 @@ def parse_session(path: Path):
                     txt = b.get("text", "").strip()
                     if 40 < len(txt) < 700 and not NOISE.search(txt):
                         last_reason = txt
-                        if len(s["excerpts"]) < 12: s["excerpts"].append((t, txt))
+                        if len(s["excerpts"]) < 12:
+                            s["excerpts"].append((t, txt))
                         # backfill reasoning for stories under the current prompt
                         for st in s["stories"]:
                             if st["prompt"] == last_prompt and not st["reason"]:
@@ -108,6 +132,7 @@ def parse_session(path: Path):
     if not s["start"] or (not s["files"] and not s["prompts"]):
         return None
     return s
+
 
 def parse_codex_session(path: Path):
     """OpenAI Codex CLI rollout-*.jsonl -> same session shape. Defensive."""
@@ -120,18 +145,24 @@ def parse_codex_session(path: Path):
         lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
     except Exception:
         return None
+
     def note_file(fp, t):
         s["files"].add(fp)
         key = (fp, last_prompt)
         if last_prompt and key not in seen:
             seen.add(key)
-            s["stories"].append({"file": fp, "t": t, "prompt": last_prompt, "reason": last_reason})
+            s["stories"].append(
+                {"file": fp, "t": t, "prompt": last_prompt, "reason": last_reason})
     for line in lines:
         line = line.strip()
-        if not line: continue
-        try: rec = json.loads(line)
-        except Exception: continue
-        if not isinstance(rec, dict): continue
+        if not line:
+            continue
+        try:
+            rec = json.loads(line)
+        except Exception:
+            continue
+        if not isinstance(rec, dict):
+            continue
         t = iso(rec.get("timestamp"))
         if t:
             s["start"] = min(s["start"], t) if s["start"] else t
@@ -139,9 +170,11 @@ def parse_codex_session(path: Path):
         p = rec.get("payload") if isinstance(rec.get("payload"), dict) else rec
         rtype = rec.get("type") or p.get("type")
         if rtype == "session_meta":
-            s["cwd"] = p.get("cwd") or (p.get("git") or {}).get("cwd") or s["cwd"]
+            s["cwd"] = p.get("cwd") or (
+                p.get("git") or {}).get("cwd") or s["cwd"]
             g = p.get("git") or {}
-            if g.get("branch"): s["branches"].add(g["branch"])
+            if g.get("branch"):
+                s["branches"].add(g["branch"])
             continue
         ptype = p.get("type")
         if ptype == "message":
@@ -149,11 +182,14 @@ def parse_codex_session(path: Path):
             role = p.get("role")
             texts = []
             c = p.get("content")
-            if isinstance(c, str): texts = [c]
+            if isinstance(c, str):
+                texts = [c]
             elif isinstance(c, list):
-                texts = [b.get("text", "") for b in c if isinstance(b, dict) and b.get("text")]
+                texts = [b.get("text", "")
+                         for b in c if isinstance(b, dict) and b.get("text")]
             joined = "\n".join(x for x in texts if x).strip()
-            if not joined: continue
+            if not joined:
+                continue
             if role == "user":
                 if NOISE.search(joined[:120]) or CLI_PROMPT.match(joined) or len(joined) < 20:
                     continue
@@ -162,7 +198,8 @@ def parse_codex_session(path: Path):
             elif role == "assistant":
                 if 40 < len(joined) < 700 and not NOISE.search(joined):
                     last_reason = joined
-                    if len(s["excerpts"]) < 12: s["excerpts"].append((t, joined))
+                    if len(s["excerpts"]) < 12:
+                        s["excerpts"].append((t, joined))
                     for st in s["stories"]:
                         if st["prompt"] == last_prompt and not st["reason"]:
                             st["reason"] = joined
@@ -171,9 +208,12 @@ def parse_codex_session(path: Path):
             raw = args if isinstance(args, str) else json.dumps(args)
             try:
                 parsed = json.loads(args) if isinstance(args, str) else args
-                cmd = parsed.get("command") if isinstance(parsed, dict) else None
-                if isinstance(cmd, list): raw = " ".join(str(x) for x in cmd)
-                elif isinstance(cmd, str): raw = cmd
+                cmd = parsed.get("command") if isinstance(
+                    parsed, dict) else None
+                if isinstance(cmd, list):
+                    raw = " ".join(str(x) for x in cmd)
+                elif isinstance(cmd, str):
+                    raw = cmd
             except Exception:
                 pass
             for m in PATCH_FILE.finditer(raw):
@@ -183,6 +223,7 @@ def parse_codex_session(path: Path):
     if not s["start"] or (not s["files"] and not s["prompts"]):
         return None
     return s
+
 
 def parse_any(path: Path):
     """Sniff format: Codex rollouts are named rollout-* or open with session_meta."""
@@ -196,18 +237,23 @@ def parse_any(path: Path):
     if '"session_meta"' in head or '"response_item"' in head:
         return parse_codex_session(path)
     sess = parse_session(path)
-    if sess: sess["agent"] = "claude"
+    if sess:
+        sess["agent"] = "claude"
     return sess
+
 
 def all_transcript_files():
     """Every JSONL Claude Code may have written, live + archived."""
-    roots = [CLAUDE_DIR / "projects", CLAUDE_DIR / "sessions", CODEX_DIR / "sessions", ARCHIVE_DIR]
+    roots = [CLAUDE_DIR / "projects", CLAUDE_DIR /
+             "sessions", CODEX_DIR / "sessions", ARCHIVE_DIR]
     for root in roots:
         if root.exists():
             yield from root.rglob("*.jsonl")
 
+
 def norm(p):
     return str(p).replace("\\", "/").rstrip("/").lower()
+
 
 def fingerprint(sess):
     """Content identity: survives renamed/duplicated transcript files (resume copies)."""
@@ -215,12 +261,14 @@ def fingerprint(sess):
     start = sess["start"].isoformat()[:16] if sess["start"] else ""
     return (start, first)
 
+
 def find_sessions(repo: Path):
     repo_n = norm(repo.resolve())
     best = {}   # fingerprint -> session (keep the most complete copy)
     for f in all_transcript_files():
         sess = parse_any(f)
-        if not sess: continue
+        if not sess:
+            continue
         cwd_n = norm(sess["cwd"]) if sess["cwd"] else ""
         if cwd_n and (cwd_n == repo_n or cwd_n.startswith(repo_n + "/") or repo_n.startswith(cwd_n + "/")):
             key = fingerprint(sess)
@@ -231,33 +279,107 @@ def find_sessions(repo: Path):
 
 # ------------------------- archiver -------------------------
 
+
 def archive():
     """Copy every live transcript into ~/.gitwhy/archive before cleanup eats it."""
     saved = skipped = 0
     for root in (CLAUDE_DIR / "projects", CLAUDE_DIR / "sessions", CODEX_DIR / "sessions"):
-        if not root.exists(): continue
+        if not root.exists():
+            continue
         for f in root.rglob("*.jsonl"):
             rel = f.relative_to(root)
             dest = ARCHIVE_DIR / root.name / rel
             dest.parent.mkdir(parents=True, exist_ok=True)
             if dest.exists() and dest.stat().st_size >= f.stat().st_size:
-                skipped += 1; continue
-            shutil.copy2(f, dest); saved += 1
-    print(f"[✓] archived {saved} transcript(s), {skipped} already safe -> {ARCHIVE_DIR}")
+                skipped += 1
+                continue
+            shutil.copy2(f, dest)
+            saved += 1
+    print(
+        f"[✓] archived {saved} transcript(s), {skipped} already safe -> {ARCHIVE_DIR}")
     if saved == 0 and skipped == 0:
         print("[!] no transcripts found. Also set \"cleanupPeriodDays\": 3650 in "
               f"{CLAUDE_DIR / 'settings.json'} so future sessions survive.")
 
+# ------------------------- Understand-Anything integration -------------------------
+
+
+def load_ua_graph(repo: Path):
+    """Read a committed Understand-Anything knowledge graph if present.
+    Returns {rel_file_path: {layer, summary, functions:[...], classes:[...]}} or None.
+    Defensive: their schema may evolve; every field optional."""
+    for d in (".ua", ".understand-anything"):
+        p = repo / d / "knowledge-graph.json"
+        if p.exists():
+            try:
+                g = json.loads(p.read_text(encoding="utf-8", errors="replace"))
+            except Exception:
+                return None
+            nodes = g.get("nodes") or []
+            out = {}
+
+            def rel(fp):
+                if not fp:
+                    return None
+                return norm(fp).lstrip("/")
+            for n in nodes:
+                if not isinstance(n, dict):
+                    continue
+                ntype = n.get("type", "")
+                fp = n.get("filePath") or (n.get("id", "")[5:] if str(
+                    n.get("id", "")).startswith("file:") else None)
+                r = rel(fp)
+                if not r:
+                    continue
+                entry = out.setdefault(r, {"layer": None, "summary": None,
+                                           "functions": [], "classes": []})
+                if ntype == "file":
+                    entry["layer"] = n.get("layer") or entry["layer"]
+                    entry["summary"] = n.get("summary") or entry["summary"]
+                elif ntype in ("function", "method"):
+                    if n.get("name"):
+                        entry["functions"].append(n["name"])
+                elif ntype == "class":
+                    if n.get("name"):
+                        entry["classes"].append(n["name"])
+                if entry["layer"] is None and n.get("layer"):
+                    entry["layer"] = n.get("layer")
+            # map every node id -> its file, then lift edges to file<->file structural links
+            id2file = {}
+            for n in nodes:
+                if not isinstance(n, dict):
+                    continue
+                fp = n.get("filePath") or (n.get("id", "")[5:] if str(
+                    n.get("id", "")).startswith("file:") else None)
+                if n.get("id") and fp:
+                    id2file[n["id"]] = rel(fp)
+            fedges, seen = [], set()
+            for e in (g.get("edges") or []):
+                if not isinstance(e, dict):
+                    continue
+                a, b = id2file.get(e.get("source")), id2file.get(
+                    e.get("target"))
+                if a and b and a != b:
+                    key = (a, b, e.get("type", ""))
+                    if key not in seen and len(fedges) < 800:
+                        seen.add(key)
+                        fedges.append([a, b, e.get("type", "rel")])
+            return {"files": out, "edges": fedges, "count": len(nodes), "dir": d} if out else None
+    return None
+
 # ------------------------- git -------------------------
+
 
 def is_git_repo(repo: Path):
     return (repo / ".git").exists()
+
 
 def git_commits(repo: Path):
     fmt = "%H%x1f%an%x1f%aI%x1f%s"
     try:
         out = subprocess.run(
-            ["git", "-C", str(repo), "log", f"--pretty=format:{fmt}", "--numstat"],
+            ["git", "-C", str(repo), "log",
+             f"--pretty=format:{fmt}", "--numstat"],
             capture_output=True, text=True, check=True,
             encoding="utf-8", errors="replace").stdout
     except Exception as e:
@@ -267,28 +389,35 @@ def git_commits(repo: Path):
     for line in out.splitlines():
         if "\x1f" in line:
             h, an, at, subj = line.split("\x1f", 3)
-            cur = {"hash": h, "author": an, "time": iso(at), "subject": subj, "files": []}
+            cur = {"hash": h, "author": an, "time": iso(
+                at), "subject": subj, "files": []}
             commits.append(cur)
         elif line.strip() and cur:
             parts = line.split("\t")
-            if len(parts) == 3: cur["files"].append(parts[2])
+            if len(parts) == 3:
+                cur["files"].append(parts[2])
     return commits
 
 # ------------------------- linking -------------------------
+
 
 def relativize(s, repo: Path):
     repo_n = norm(repo.resolve())
     rel = set()
     for f in s["files"]:
         fn = norm(f)
-        rel.add(fn[len(repo_n):].lstrip("/") if fn.startswith(repo_n) else fn.lstrip("/"))
+        rel.add(fn[len(repo_n):].lstrip("/")
+                if fn.startswith(repo_n) else fn.lstrip("/"))
     s["files_rel"] = rel
+
 
 def rel_one(f, s):
     fn = norm(f)
     for r in s.get("files_rel", set()):
-        if fn.endswith("/" + r) or fn == r: return r
+        if fn.endswith("/" + r) or fn == r:
+            return r
     return fn.lstrip("/")
+
 
 def link(sessions, commits, repo: Path):
     links = []
@@ -297,14 +426,17 @@ def link(sessions, commits, repo: Path):
         lo = s["start"] - timedelta(minutes=SLACK_MIN)
         hi = s["end"] + timedelta(minutes=SLACK_MIN)
         for c in commits:
-            if not c["time"]: continue
+            if not c["time"]:
+                continue
             ct = c["time"].astimezone(timezone.utc)
             in_window = lo <= ct <= hi
             overlap = s["files_rel"] & set(c["files"])
             committed_inside = any(
-                t and abs((ct - t.astimezone(timezone.utc)).total_seconds()) < 900
+                t and abs((ct - t.astimezone(timezone.utc)
+                           ).total_seconds()) < 900
                 for t, _ in s["git_commits_in_session"])
-            score = len(overlap) * 2 + (3 if in_window else 0) + (5 if committed_inside else 0)
+            score = len(overlap) * 2 + (3 if in_window else 0) + \
+                (5 if committed_inside else 0)
             if (in_window and overlap) or committed_inside:
                 links.append({"session": s["id"], "commit": c["hash"], "score": score,
                               "overlap": sorted(overlap), "inside": committed_inside})
@@ -312,8 +444,10 @@ def link(sessions, commits, repo: Path):
 
 # ------------------------- demo data -------------------------
 
+
 def demo_data():
     now = datetime.now(timezone.utc)
+
     def S(i, hrs_ago, prompt, files, excerpt, n=34):
         agent = "codex" if i % 2 == 0 else "claude"
         st = now - timedelta(hours=hrs_ago)
@@ -338,28 +472,40 @@ def demo_data():
           ["eval/report.py", "eval/chrono.py"],
           "Single self-contained HTML per run, embedding the confusion matrix as inline SVG so reports stay diffable in git and viewable without a server."),
     ]
+
     def C(h, hrs_ago, subj, files):
         return {"hash": h, "author": "Mehrta Eslami", "time": now - timedelta(hours=hrs_ago),
                 "subject": subj, "files": files}
     commits = [
-        C("a3f9c21", 75.1, "Add DANN subject-adversarial branch with GRL warmup", ["train_v4.py", "models/dann.py"]),
-        C("b7d0e55", 51.0, "Replace static posture baseline with rolling EMA (90s half-life)", ["features/posture.py", "train_v4.py"]),
-        C("c1a8f02", 28.2, "Weibull OOD gate: abstain on out-of-distribution hand shapes", ["models/ood_gate.py", "eval/chrono.py"]),
-        C("d9e4b77", 5.1, "Per-run HTML eval reports with inline-SVG confusion matrix", ["eval/report.py"]),
-        C("e2c6a90", 120.0, "Initial chronological eval protocol", ["eval/chrono.py"]),
+        C("a3f9c21", 75.1, "Add DANN subject-adversarial branch with GRL warmup",
+          ["train_v4.py", "models/dann.py"]),
+        C("b7d0e55", 51.0, "Replace static posture baseline with rolling EMA (90s half-life)",
+          ["features/posture.py", "train_v4.py"]),
+        C("c1a8f02", 28.2, "Weibull OOD gate: abstain on out-of-distribution hand shapes",
+          ["models/ood_gate.py", "eval/chrono.py"]),
+        C("d9e4b77", 5.1, "Per-run HTML eval reports with inline-SVG confusion matrix",
+          ["eval/report.py"]),
+        C("e2c6a90", 120.0, "Initial chronological eval protocol",
+          ["eval/chrono.py"]),
     ]
     return sessions, commits
 
 # ------------------------- report -------------------------
 
+
 def clip(txt, n=380):
     txt = (txt or "").strip()
-    if len(txt) <= n: return txt
+    if len(txt) <= n:
+        return txt
     return txt[:n].rsplit(" ", 1)[0] + " …"
 
-def render(sessions, commits, links, repo_name, has_git):
+
+def render(sessions, commits, links, repo_name, has_git, ua=None):
     payload = {
         "repo": repo_name, "hasGit": has_git,
+        "ua": ({"count": ua["count"], "dir": ua["dir"],
+                "edges": ua.get("edges", []),
+                "files": {f: ua["files"][f] for f in ua["files"]}} if ua else None),
         "sessions": [{"id": s["id"], "agent": s.get("agent", "claude"),
                       "start": s["start"].isoformat(), "n": s["n_msgs"],
                       "prompt": clip(s["prompts"][0][1] if s["prompts"] else ""),
@@ -374,35 +520,60 @@ def render(sessions, commits, links, repo_name, has_git):
         "links": [{"s": L["session"], "c": L["commit"][:7], "score": L["score"],
                    "overlap": L["overlap"], "inside": L["inside"]} for L in links],
     }
-    tpl = Path(__file__).with_name("report_template.html").read_text(encoding="utf-8")
+    tpl = Path(__file__).with_name(
+        "report_template.html").read_text(encoding="utf-8")
     return tpl.replace("__DATA__", json.dumps(payload, ensure_ascii=False))
 
+
 def report(repo: Path, demo=False):
+    ua = None
     if demo:
         sessions, commits = demo_data()
         links = link(sessions, commits, Path("."))
         name, has_git = "keystroke-decoder (demo data)", True
+        ua = {"count": 42, "dir": ".ua", "files": {
+            "models/dann.py": {"layer": "model", "summary": "Subject-adversarial branch: gradient-reversal head that strips subject identity from the encoder.",
+                               "functions": ["GradReverse.forward", "dann_lambda_schedule"], "classes": ["DANNHead"]},
+            "train_v4.py": {"layer": "training", "summary": "Main training loop with LOSO evaluation and checkpointing.",
+                            "functions": ["train_epoch", "evaluate_loso", "save_checkpoint"], "classes": []},
+            "eval/chrono.py": {"layer": "evaluation", "summary": "Chronological split evaluator exposing within-session drift.",
+                               "functions": ["windowed_accuracy", "drift_curve"], "classes": []}},
+              "edges": [["train_v4.py", "models/dann.py", "imports"],
+                        ["train_v4.py", "eval/chrono.py", "calls"],
+                        ["eval/report.py", "eval/chrono.py", "imports"],
+                        ["features/posture.py", "train_v4.py", "calls"]]}
     else:
         print("[*] scanning Claude Code transcripts (live + archive)…")
         sessions = find_sessions(repo)
         print(f"[*] {len(sessions)} session(s) found for this project")
         has_git = is_git_repo(repo)
         commits = git_commits(repo) if has_git else []
-        if has_git: print(f"[*] {len(commits)} commit(s) in git log")
-        else: print("[i] no git repo here — session-only report (run `git init` to start linking commits)")
-        for s in sessions: relativize(s, repo)
+        if has_git:
+            print(f"[*] {len(commits)} commit(s) in git log")
+        else:
+            print(
+                "[i] no git repo here — session-only report (run `git init` to start linking commits)")
+        for s in sessions:
+            relativize(s, repo)
         links = link(sessions, commits, repo) if commits else []
         name = repo.resolve().name
+        ua = load_ua_graph(repo)
+        if ua:
+            print(
+                f"[*] Understand-Anything graph found ({ua['dir']}, {ua['count']} nodes) \u2014 merging structure + provenance")
         if not sessions:
             print("[!] no sessions matched this folder. Tips: run `python gitwhy.py archive` first;"
                   " make sure you've used Claude Code inside this exact folder.")
     print(f"[*] {len(links)} session↔commit link(s)")
     out = (repo if repo.exists() else Path(".")) / "gitwhy-report.html"
-    out.write_text(render(sessions, commits, links, name, has_git), encoding="utf-8")
+    out.write_text(render(sessions, commits, links,
+                   name, has_git, ua), encoding="utf-8")
     print(f"[✓] wrote {out.resolve()}")
-    write_agent_context(repo if repo.exists() else Path("."), sessions, commits, links, name)
+    write_agent_context(repo if repo.exists() else Path(
+        "."), sessions, commits, links, name, ua)
 
-def write_agent_context(base: Path, sessions, commits, links, name):
+
+def write_agent_context(base: Path, sessions, commits, links, name, ua=None):
     """Token-cheap provenance digest for coding agents (Claude Code, Codex, Cursor).
     Point the agent at GITWHY.md instead of letting it re-grep history."""
     cmap = {c["hash"][:7]: c for c in commits}
@@ -410,7 +581,8 @@ def write_agent_context(base: Path, sessions, commits, links, name):
     for s in sessions:
         for st in s.get("stories", []):
             f = rel_one(st["file"], s)
-            per_file.setdefault(f, []).append((st["t"], st["prompt"], s.get("agent", "?")))
+            per_file.setdefault(f, []).append(
+                (st["t"], st["prompt"], s.get("agent", "?")))
     best_commit = {}
     for L in links:
         for f in L["overlap"]:
@@ -423,18 +595,22 @@ def write_agent_context(base: Path, sessions, commits, links, name):
              "Agents: read this before exploring; it replaces re-deriving intent from grep.",
              ""]
     for f in sorted(per_file):
-        lines.append(f"## {f}")
+        layer = (ua or {}).get("files", {}).get(
+            f, {}).get("layer") if ua else None
+        lines.append(f"## {f}" + (f"  \u00b7 layer: {layer}" if layer else ""))
         eps = sorted(per_file[f], key=lambda x: (x[0] is None, x[0]))
         seen_p = set()
         shown = 0
         for t, prompt, agent in eps:
             key = prompt[:60]
-            if key in seen_p: continue
+            if key in seen_p:
+                continue
             seen_p.add(key)
             day = t.date().isoformat() if t else "?"
             lines.append(f"- {day} [{agent}] {clip(prompt, 110)}")
             shown += 1
-            if shown >= 4: break
+            if shown >= 4:
+                break
         bc = best_commit.get(f)
         if bc and bc[1] in cmap:
             lines.append(f"- commit {bc[1]}: {cmap[bc[1]]['subject']}")
@@ -451,14 +627,24 @@ def write_agent_context(base: Path, sessions, commits, links, name):
     print(f"[\u2713] wrote GITWHY.md + gitwhy.json  ({len(md)//4} tokens approx \u2014 "
           "add 'Read GITWHY.md first' to your CLAUDE.md / AGENTS.md)")
 
+
 def main():
     args = [a for a in sys.argv[1:]]
-    if "--demo" in args: report(Path("."), demo=True); return
-    if args and args[0] == "archive": archive(); return
-    if not args: print(__doc__); sys.exit(1)
+    if "--demo" in args:
+        report(Path("."), demo=True)
+        return
+    if args and args[0] == "archive":
+        archive()
+        return
+    if not args:
+        print(__doc__)
+        sys.exit(1)
     repo = Path(args[0])
-    if not repo.exists(): print(f"[!] path not found: {repo}"); sys.exit(1)
+    if not repo.exists():
+        print(f"[!] path not found: {repo}")
+        sys.exit(1)
     report(repo)
+
 
 if __name__ == "__main__":
     main()
