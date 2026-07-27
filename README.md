@@ -27,8 +27,9 @@ One Python file. No dependencies. 100% local — nothing is uploaded anywhere.
 
 <img width="1243" height="720" alt="gitwhy origin story view" src="https://github.com/user-attachments/assets/7620240c-b527-4408-9cce-8b0c932b2b00" />
 
-*Graph and origin-story view from a 200-session benchmark history — your real
-project's report shows your real files and your real conversations.*
+*Graph and origin-story view from a 200-session benchmark history — or skip the screenshots and
+[click around the live demo](https://mehrtam.github.io/gitwhy/). Your real project's report shows
+your real files and your real conversations.*
 
 ## Try it in 60 seconds
 
@@ -80,6 +81,15 @@ Agents read that file automatically at session start. The digest costs roughly
 **~130 tokens per file**, so even a large project's entire "why" fits in a few
 thousand tokens — instead of the agent re-deriving intent with grep/read loops
 every single session.
+
+## Plays well with Understand-Anything
+
+If your repo has a committed [Understand-Anything](https://github.com/Egonex-AI/Understand-Anything)
+knowledge graph (`.ua/` — the 73k⭐ codebase mapper), gitwhy detects it automatically and merges
+the two views: their **structure** (layers, functions, classes, summaries) appears alongside its
+**provenance** in every file's panel, and their relationships render as structure edges in the
+graph. No setup — run their `/understand` once, then run gitwhy as normal. Validated against
+plugin v2.9.4. Without it, gitwhy works exactly the same, just structure-free.
 
 ## What can I build on `gitwhy.json`?
 
