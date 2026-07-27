@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gitwhy — why does this code exist?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:wght@400..700&family=Schibsted+Grotesk:wght@400..900&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0c0a08;
+      --elev: #14110d;
+      --surface: #1a1612;
+      --ink: #ede5d4;
+      --dim: #b8ad97;
+      --faint: #6b6354;
+      --rule: #2a2520;
+      --accent: #d4a259;
+      --warm: #c97847;
+      --cool: #8aa394;
+      --hot: #c14545;
+      --serif: 'Fraunces', serif;
+      --sans: 'Schibsted Grotesk', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(rgba(212, 162, 89, .04) 1px, transparent 1px), linear-gradient(90deg, rgba(212, 162, 89, .04) 1px, transparent 1px);
+      background-size: 80px 80px;
+      pointer-events: none
+    }
+
+    .wrap {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 28px 22px 70px;
+      position: relative
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 6px
+    }
+
+    .logo {
+      font-family: var(--mono);
+      font-size: 13px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--faint)
+    }
+
+    .logo b {
+      color: var(--accent);
+      font-weight: 600
+    }
+
+    h1 {
+      font-family: var(--serif);
+      font-weight: 550;
+      font-size: clamp(24px, 3.6vw, 34px);
+      line-height: 1.12;
+      margin: 4px 0 14px
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--accent)
+    }
+
+    h1 code {
+      font-family: var(--mono);
+      font-size: .82em;
+      color: var(--dim)
+    }
+
+    .stats {
+      display: flex;
+      gap: 22px;
+      flex-wrap: wrap;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--faint);
+      letter-spacing: .06em;
+      margin-bottom: 20px
+    }
+
+    .stats b {
+      color: var(--ink);
+      font-weight: 500
+    }
+
+    /* ─── unified stage: graph + panel ─── */
+    .stage {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr);
+      gap: 1px;
+      background: var(--rule);
+      border: 1px solid var(--rule)
+    }
+
+    .gside {
+      background: var(--elev);
+      position: relative;
+      min-height: 540px
+    }
+
+    #graph {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+      touch-action: none
+    }
+
+    #graph:active {
+      cursor: grabbing
+    }
+
+    .glegend {
+      position: absolute;
+      left: 14px;
+      top: 12px;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: var(--faint);
+      letter-spacing: .06em;
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      pointer-events: none;
+      background: rgba(12, 10, 8, .55);
+      padding: 6px 10px
+    }
+
+    .glegend .k {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle
+    }
+
+    .ghint {
+      position: absolute;
+      left: 14px;
+      bottom: 12px;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: var(--faint);
+      letter-spacing: .06em;
+      pointer-events: none;
+      background: rgba(12, 10, 8, .55);
+      padding: 6px 10px
+    }
+
+    .gtip {
+      position: fixed;
+      pointer-events: none;
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 11.5px;
+      padding: 8px 12px;
+      max-width: 340px;
+      display: none;
+      z-index: 10;
+      line-height: 1.5
+    }
+
+    /* panel */
+    .panel {
+      background: var(--elev);
+      padding: 24px 24px 28px;
+      overflow-y: auto;
+      max-height: calc(100vh - 60px);
+      min-height: 540px
+    }
+
+    .panel .pkind {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px
+    }
+
+    .panel .pkind .k-file {
+      color: var(--accent)
+    }
+
+    .panel .pkind .k-session {
+      color: var(--cool)
+    }
+
+    .panel .pkind .k-commit {
+      color: var(--warm)
+    }
+
+    .panel h2 {
+      font-family: var(--serif);
+      font-size: 21px;
+      font-weight: 550;
+      line-height: 1.25;
+      margin-bottom: 14px;
+      word-break: break-word
+    }
+
+    .panel h2 em {
+      color: var(--accent);
+      font-style: italic
+    }
+
+    .pmeta {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--faint);
+      letter-spacing: .05em;
+      margin-bottom: 16px;
+      line-height: 1.8
+    }
+
+    .epoch {
+      border-left: 2px solid var(--accent);
+      padding: 0 0 0 16px;
+      margin-bottom: 22px;
+      position: relative
+    }
+
+    .epoch::before {
+      content: '';
+      position: absolute;
+      left: -5px;
+      top: 6px;
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%
+    }
+
+    .ewhen {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: var(--faint);
+      letter-spacing: .08em;
+      margin-bottom: 7px
+    }
+
+    .ewhen .strong-link {
+      color: var(--cool)
+    }
+
+    .eprompt {
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      padding: 12px 14px;
+      margin-bottom: 8px
+    }
+
+    .eprompt .plabel,
+    .eanswer .alabel {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 5px
+    }
+
+    .eprompt .plabel {
+      color: var(--warm)
+    }
+
+    .eanswer .alabel {
+      color: var(--cool)
+    }
+
+    .eprompt p {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 14.5px;
+      line-height: 1.5
+    }
+
+    .eanswer {
+      padding: 10px 14px;
+      border: 1px solid var(--rule);
+      border-top: none;
+      background: var(--bg)
+    }
+
+    .eanswer p {
+      font-size: 13px;
+      color: var(--dim);
+      line-height: 1.6
+    }
+
+    .ecommit {
+      margin-top: 8px;
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--dim)
+    }
+
+    .ecommit .h {
+      color: var(--warm)
+    }
+
+    .linklist {
+      list-style: none;
+      margin-bottom: 16px
+    }
+
+    .linklist li {
+      margin-bottom: 6px
+    }
+
+    .pill {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 11.5px;
+      border: 1px solid var(--rule);
+      color: var(--dim);
+      padding: 5px 10px;
+      cursor: pointer;
+      transition: all .18s;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: middle
+    }
+
+    .pill:hover {
+      border-color: var(--accent);
+      color: var(--ink)
+    }
+
+    .pill .dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-right: 7px
+    }
+
+    .psec {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin: 16px 0 8px
+    }
+
+    .pempty {
+      color: var(--faint);
+      font-size: 14px;
+      line-height: 1.7
+    }
+
+    .pempty .big {
+      font-family: var(--serif);
+      font-size: 19px;
+      color: var(--dim);
+      display: block;
+      margin-bottom: 10px
+    }
+
+    .pquote {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 15px;
+      color: var(--ink);
+      line-height: 1.55;
+      border-left: 2px solid var(--cool);
+      padding-left: 14px;
+      margin-bottom: 16px
+    }
+
+    /* timeline */
+    .tl {
+      border: 1px solid var(--rule);
+      border-bottom: none;
+      background: var(--elev);
+      padding: 14px 18px 10px;
+      position: relative
+    }
+
+    .tl .tlabel {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between
+    }
+
+    .tlrow {
+      position: relative;
+      height: 16px;
+      margin-bottom: 6px
+    }
+
+    .tlrow .rl {
+      position: absolute;
+      left: 0;
+      top: 1px;
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--faint);
+      letter-spacing: .08em
+    }
+
+    .tldot {
+      position: absolute;
+      top: 3px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      cursor: pointer;
+      transform: translateX(-5px);
+      transition: transform .15s;
+      border: 1.5px solid rgba(12, 10, 8, .6)
+    }
+
+    .tldot:hover {
+      transform: translateX(-5px) scale(1.5)
+    }
+
+    .tlticks {
+      position: relative;
+      height: 14px;
+      margin-left: 52px
+    }
+
+    .tltick {
+      position: absolute;
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--faint);
+      letter-spacing: .06em;
+      transform: translateX(-50%)
+    }
+
+    .tlaxis {
+      height: 1px;
+      background: var(--rule);
+      margin: 4px 0 2px;
+      margin-left: 52px
+    }
+
+    .tlrow .lane {
+      position: absolute;
+      left: 52px;
+      right: 0;
+      top: 0;
+      bottom: 0
+    }
+
+    /* search */
+    .psearch {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--rule);
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 12.5px;
+      padding: 9px 12px;
+      outline: none;
+      margin-bottom: 12px
+    }
+
+    .psearch:focus {
+      border-color: var(--accent)
+    }
+
+    .pill .cnt {
+      color: var(--faint);
+      margin-left: 6px
+    }
+
+    /* UA structure block */
+    .uastruct {
+      border: 1px solid var(--rule);
+      background: var(--surface);
+      padding: 14px 16px;
+      margin-bottom: 18px
+    }
+
+    .uastruct .ulabel {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--cool);
+      margin-bottom: 7px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px
+    }
+
+    .uastruct .usum {
+      font-size: 13px;
+      color: var(--dim);
+      line-height: 1.55;
+      margin-bottom: 9px
+    }
+
+    .uastruct .utags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px
+    }
+
+    .uastruct .ut {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      border: 1px solid var(--rule);
+      color: var(--dim);
+      padding: 3px 8px
+    }
+
+    .uastruct .ut.fn::before {
+      content: 'ƒ ';
+      color: var(--cool)
+    }
+
+    .uastruct .ut.cl::before {
+      content: '◻ ';
+      color: var(--warm)
+    }
+
+    footer {
+      margin-top: 34px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--faint);
+      letter-spacing: .06em;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none
+    }
+
+    @media(max-width:880px) {
+      .stage {
+        grid-template-columns: 1fr
+      }
+
+      .gside {
+        min-height: 420px
+      }
+
+      .panel {
+        min-height: auto;
+        max-height: none
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo"><b>gitwhy</b> · provenance for AI-written code</div>
+      <div class="logo" style="display:flex;gap:14px;align-items:baseline">
+        <span id="repoName"></span>
+        <select id="langSel"
+          style="background:var(--bg);color:var(--dim);border:1px solid var(--rule);font-family:var(--mono);font-size:11px;padding:3px 6px">
+          <option value="en">EN</option>
+          <option value="fa">فارسی</option>
+        </select>
+      </div>
+    </header>
+    <h1><code>git blame</code> <span id="tag1">tells you who.</span> <em id="tag2">This tells you why.</em></h1>
+    <div class="stats" id="stats"></div>
+
+    <div class="tl" id="tl" style="display:none">
+      <div class="tlabel"><span id="tlTitle">activity over time — click a dot</span><span id="tlRange"></span></div>
+      <div class="tlrow"><span class="rl" id="rlS">sessions</span>
+        <div class="lane" id="laneS"></div>
+      </div>
+      <div class="tlaxis"></div>
+      <div class="tlrow"><span class="rl" id="rlC">commits</span>
+        <div class="lane" id="laneC"></div>
+      </div>
+      <div class="tlticks" id="tlTicks"></div>
+    </div>
+    <div class="stage">
+      <div class="gside">
+        <canvas id="graph"></canvas>
+        <div class="glegend">
+          <span><span class="k" style="background:var(--cool)"></span><span id="lgS">session</span> (◈ claude · ◇
+            codex)</span>
+          <span><span class="k" style="background:var(--warm)"></span><span id="lgC">commit</span></span>
+          <span><span class="k" style="background:var(--accent)"></span><span id="lgF">file</span></span>
+          <span id="lgUA" style="display:none"><span
+              style="display:inline-block;width:14px;border-top:2px dashed #6b94b8;vertical-align:middle;margin-right:6px"></span>structure
+            (Understand-Anything)</span>
+        </div>
+        <div class="ghint" id="ghint">click any node · drag to rearrange</div>
+        <div class="gtip" id="gtip"></div>
+      </div>
+      <div class="panel" id="panel"></div>
+    </div>
+
+    <footer>
+      <div>gitwhy · v0.5 · runs 100% locally · nothing uploaded</div>
+      <div>by <a href="https://mehrtam.github.io" target="_blank" rel="noopener">Mehrta Eslami</a></div>
+    </footer>
+  </div>
+
+  <script>
+    const DATA = {"repo": "keystroke-decoder (demo data)", "hasGit": true, "ua": {"count": 42, "dir": ".ua", "edges": [["train_v4.py", "models/dann.py", "imports"], ["train_v4.py", "eval/chrono.py", "calls"], ["eval/report.py", "eval/chrono.py", "imports"], ["features/posture.py", "train_v4.py", "calls"]], "files": {"models/dann.py": {"layer": "model", "summary": "Subject-adversarial branch: gradient-reversal head that strips subject identity from the encoder.", "functions": ["GradReverse.forward", "dann_lambda_schedule"], "classes": ["DANNHead"]}, "train_v4.py": {"layer": "training", "summary": "Main training loop with LOSO evaluation and checkpointing.", "functions": ["train_epoch", "evaluate_loso", "save_checkpoint"], "classes": []}, "eval/chrono.py": {"layer": "evaluation", "summary": "Chronological split evaluator exposing within-session drift.", "functions": ["windowed_accuracy", "drift_curve"], "classes": []}}}, "sessions": [{"id": "sess-1", "agent": "claude", "start": "2026-07-24T11:16:37.278421+00:00", "n": 34, "prompt": "the per-user calibration is overfitting — LOSO accuracy drops 14 points on unseen subjects. can we try adversarial training to strip subject identity from the features?", "excerpt": "The cleanest fix is a DANN-style gradient reversal layer: a subject classifier head whose gradient is reversed into the encoder, so the encoder is explicitly punished for encoding subject identity. I'll add a lambda warmup schedule since flipping it on at full strength destabilises the main task early in training.", "stories": [{"file": "train_v4.py", "t": "2026-07-24T11:26:37.278421+00:00", "prompt": "the per-user calibration is overfitting — LOSO accuracy drops 14 points on unseen subjects. can we try adversarial training to strip subject identity from the features?", "reason": "The cleanest fix is a DANN-style gradient reversal layer: a subject classifier head whose gradient is reversed into the encoder, so the encoder is explicitly punished for encoding subject identity. I'll add a lambda warmup schedule since flipping it on at full strength destabilises the main task early in training."}, {"file": "models/dann.py", "t": "2026-07-24T11:26:37.278421+00:00", "prompt": "the per-user calibration is overfitting — LOSO accuracy drops 14 points on unseen subjects. can we try adversarial training to strip subject identity from the features?", "reason": "The cleanest fix is a DANN-style gradient reversal layer: a subject classifier head whose gradient is reversed into the encoder, so the encoder is explicitly punished for encoding subject identity. I'll add a lambda warmup schedule since flipping it on at full strength destabilises the main task early in training."}], "files": ["models/dann.py", "train_v4.py"]}, {"id": "sess-2", "agent": "codex", "start": "2026-07-25T11:16:37.278421+00:00", "n": 34, "prompt": "rolling EMA baseline for wrist posture — sessions drift within minutes, the fixed baseline from calibration is stale by minute 3", "excerpt": "Replacing the static calibration frame with an exponential moving average (half-life ≈ 90 s) of the wrist-relative origin. Chronological evaluation is the honest test here — random splits were hiding the drift entirely.", "stories": [{"file": "features/posture.py", "t": "2026-07-25T11:26:37.278421+00:00", "prompt": "rolling EMA baseline for wrist posture — sessions drift within minutes, the fixed baseline from calibration is stale by minute 3", "reason": "Replacing the static calibration frame with an exponential moving average (half-life ≈ 90 s) of the wrist-relative origin. Chronological evaluation is the honest test here — random splits were hiding the drift entirely."}, {"file": "train_v4.py", "t": "2026-07-25T11:26:37.278421+00:00", "prompt": "rolling EMA baseline for wrist posture — sessions drift within minutes, the fixed baseline from calibration is stale by minute 3", "reason": "Replacing the static calibration frame with an exponential moving average (half-life ≈ 90 s) of the wrist-relative origin. Chronological evaluation is the honest test here — random splits were hiding the drift entirely."}], "files": ["features/posture.py", "train_v4.py"]}, {"id": "sess-3", "agent": "claude", "start": "2026-07-26T10:16:37.278421+00:00", "n": 34, "prompt": "add a Weibull-based OOD gate so the decoder abstains instead of guessing on out-of-distribution hand shapes", "excerpt": "Fitting a Weibull to the tail of per-class max activation distances (EVT, OpenMax-style). Below threshold → abstain token rather than a forced key guess. This trades 2% coverage for a 9-point precision gain on the chronological split.", "stories": [{"file": "models/ood_gate.py", "t": "2026-07-26T10:26:37.278421+00:00", "prompt": "add a Weibull-based OOD gate so the decoder abstains instead of guessing on out-of-distribution hand shapes", "reason": "Fitting a Weibull to the tail of per-class max activation distances (EVT, OpenMax-style). Below threshold → abstain token rather than a forced key guess. This trades 2% coverage for a 9-point precision gain on the chronological split."}, {"file": "eval/chrono.py", "t": "2026-07-26T10:26:37.278421+00:00", "prompt": "add a Weibull-based OOD gate so the decoder abstains instead of guessing on out-of-distribution hand shapes", "reason": "Fitting a Weibull to the tail of per-class max activation distances (EVT, OpenMax-style). Below threshold → abstain token rather than a forced key guess. This trades 2% coverage for a 9-point precision gain on the chronological split."}], "files": ["eval/chrono.py", "models/ood_gate.py"]}, {"id": "sess-4", "agent": "codex", "start": "2026-07-27T09:16:37.278421+00:00", "n": 34, "prompt": "eval report generator — one HTML page per run with confusion matrix, per-subject LOSO table, drift curves", "excerpt": "Single self-contained HTML per run, embedding the confusion matrix as inline SVG so reports stay diffable in git and viewable without a server.", "stories": [{"file": "eval/report.py", "t": "2026-07-27T09:26:37.278421+00:00", "prompt": "eval report generator — one HTML page per run with confusion matrix, per-subject LOSO table, drift curves", "reason": "Single self-contained HTML per run, embedding the confusion matrix as inline SVG so reports stay diffable in git and viewable without a server."}, {"file": "eval/chrono.py", "t": "2026-07-27T09:26:37.278421+00:00", "prompt": "eval report generator — one HTML page per run with confusion matrix, per-subject LOSO table, drift curves", "reason": "Single self-contained HTML per run, embedding the confusion matrix as inline SVG so reports stay diffable in git and viewable without a server."}], "files": ["eval/chrono.py", "eval/report.py"]}], "commits": [{"hash": "a3f9c21", "subject": "Add DANN subject-adversarial branch with GRL warmup", "time": "2026-07-24T12:10:37.278421+00:00", "files": ["train_v4.py", "models/dann.py"]}, {"hash": "b7d0e55", "subject": "Replace static posture baseline with rolling EMA (90s half-life)", "time": "2026-07-25T12:16:37.278421+00:00", "files": ["features/posture.py", "train_v4.py"]}, {"hash": "c1a8f02", "subject": "Weibull OOD gate: abstain on out-of-distribution hand shapes", "time": "2026-07-26T11:04:37.278421+00:00", "files": ["models/ood_gate.py", "eval/chrono.py"]}, {"hash": "d9e4b77", "subject": "Per-run HTML eval reports with inline-SVG confusion matrix", "time": "2026-07-27T10:10:37.278421+00:00", "files": ["eval/report.py"]}, {"hash": "e2c6a90", "subject": "Initial chronological eval protocol", "time": "2026-07-22T15:16:37.278421+00:00", "files": ["eval/chrono.py"]}], "links": [{"s": "sess-1", "c": "a3f9c21", "score": 12, "overlap": ["models/dann.py", "train_v4.py"], "inside": true}, {"s": "sess-2", "c": "b7d0e55", "score": 12, "overlap": ["features/posture.py", "train_v4.py"], "inside": true}, {"s": "sess-3", "c": "c1a8f02", "score": 12, "overlap": ["eval/chrono.py", "models/ood_gate.py"], "inside": true}, {"s": "sess-4", "c": "d9e4b77", "score": 10, "overlap": ["eval/report.py"], "inside": true}]};
+    /* ── i18n: add a language = add a dictionary ── */
+    const STR = {
+      en: {
+        tag1: 'tells you who.', tag2: 'This tells you why.', sessions: 'sessions', commits: 'commits', links: 'links',
+        inside: 'commits made inside a session', prov: 'files with provenance', nogit: 'no git history — run git init to link commits',
+        filesTouched: 'files touched by AI', legendS: 'session', legendC: 'commit', legendF: 'file',
+        hint: 'click a node · click empty space to go back · drag to rearrange', tlTitle: 'activity over time — click any dot to open it',
+        overview: 'overview', glanceT: 'This project\u2019s why, at a glance', workedOn: 'worked on', nearCertain: 'links are near-certain', of: 'of',
+        filter: 'filter files\u2026', byActivity: 'Files by activity — click one', story: 'story', stories: 'stories',
+        fileKind: 'file · origin story', whyExist: 'why do you exist?', youAsked: 'You asked', agentReasoned: 'The agent reasoned',
+        sessionAbout: 'What this session was about', touched: 'Files it touched — click one', produced: 'Commits it produced',
+        bornIn: 'Born in this session', certain: '✓ git commit ran inside the session — near-certain link',
+        filesIn: 'Files in this commit', noSessionLinked: 'No AI session linked to this commit (made outside recorded sessions, or its transcript is gone).',
+        back: '← overview', session: 'session', commit: 'commit', msgs: 'msgs', commitInside: 'commit made inside this session',
+        structVia: 'Structure — via Understand-Anything', layer: 'layer', functions: 'functions', classes: 'classes',
+        hlMost: 'Most worked file', hlLatest: 'Latest work', hlFirst: 'Where it began', startHint: 'Click a highlight, a timeline dot, or any node in the graph.'
+      },
+      fa: {
+        tag1: 'می‌گوید چه کسی.', tag2: 'این می‌گوید چرا.', sessions: 'جلسه‌ها', commits: 'کامیت‌ها', links: 'پیوندها',
+        inside: 'کامیتِ انجام‌شده داخل جلسه', prov: 'فایل با پیشینه', nogit: 'تاریخچه‌ی git نیست — با git init کامیت‌ها وصل می‌شوند',
+        filesTouched: 'فایلِ لمس‌شده توسط AI', legendS: 'جلسه', legendC: 'کامیت', legendF: 'فایل',
+        hint: 'روی گره کلیک کنید · کلیک روی فضای خالی = بازگشت · با کشیدن جابه‌جا کنید', tlTitle: 'فعالیت در طول زمان — روی هر نقطه کلیک کنید',
+        overview: 'نمای کلی', glanceT: '«چرا»یِ این پروژه، در یک نگاه', workedOn: 'بازه‌ی کار', nearCertain: 'پیوندِ تقریباً قطعی', of: 'از',
+        filter: 'جست‌وجوی فایل…', byActivity: 'فایل‌ها بر اساس فعالیت — یکی را انتخاب کنید', story: 'روایت', stories: 'روایت',
+        fileKind: 'فایل · داستانِ پیدایش', whyExist: 'چرا وجود داری؟', youAsked: 'شما خواستید', agentReasoned: 'استدلالِ ایجنت',
+        sessionAbout: 'این جلسه درباره‌ی چه بود', touched: 'فایل‌هایی که لمس کرد — انتخاب کنید', produced: 'کامیت‌هایی که ساخت',
+        bornIn: 'در این جلسه متولد شد', certain: '✓ دستور git commit داخل جلسه اجرا شد — پیوند تقریباً قطعی',
+        filesIn: 'فایل‌های این کامیت', noSessionLinked: 'جلسه‌ای به این کامیت وصل نیست (خارج از جلسه‌های ثبت‌شده بوده یا رونوشتش پاک شده است).',
+        back: '→ نمای کلی', session: 'جلسه', commit: 'کامیت', msgs: 'پیام', commitInside: 'کامیت داخل همین جلسه انجام شد',
+        structVia: 'ساختار — از Understand-Anything', layer: 'لایه', functions: 'توابع', classes: 'کلاس‌ها',
+        hlMost: 'پرکارترین فایل', hlLatest: 'تازه‌ترین کار', hlFirst: 'نقطه‌ی شروع', startHint: 'روی یک برجسته، نقطه‌ی خط زمان یا هر گره‌ی گراف کلیک کنید.'
+      }
+    };
+    let LANG = 'en';
+    const T = k => (STR[LANG] && STR[LANG][k]) || STR.en[k] || k;
+    const S = Object.fromEntries(DATA.sessions.map(s => [s.id, s]));
+    const C = Object.fromEntries(DATA.commits.map(c => [c.hash, c]));
+    const fmt = t => t ? new Date(t).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+    const fmtD = t => t ? new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
+
+    document.getElementById('repoName').textContent = DATA.repo;
+    const strong = DATA.links.filter(l => l.inside).length;
+    const provFiles = [...new Set(DATA.links.flatMap(l => l.overlap))];
+    const allFiles = [...new Set([...provFiles, ...DATA.sessions.flatMap(s => s.files)])].sort();
+    function renderStats() {
+      document.getElementById('stats').innerHTML = DATA.hasGit
+        ? `<span><b>${DATA.sessions.length}</b> ${T('sessions')}</span><span><b>${DATA.commits.length}</b> ${T('commits')}</span>` +
+        `<span><b>${DATA.links.length}</b> ${T('links')}</span><span><b>${strong}</b> ${T('inside')}</span>` +
+        `<span><b>${provFiles.length}</b> ${T('prov')}</span>` +
+        (DATA.ua ? `<span>structure: <b>Understand-Anything</b> · ${DATA.ua.count} nodes</span>` : '')
+        : `<span><b>${DATA.sessions.length}</b> ${T('sessions')}</span><span><b>${allFiles.length}</b> ${T('filesTouched')}</span>` +
+        `<span>${T('nogit')}</span>`;
+    }
+    renderStats();
+
+    /* activity metrics shared by panels + timeline */
+    const storyCount = {};    // file -> #stories
+    DATA.sessions.forEach(s => (s.stories || []).forEach(st => { storyCount[st.file] = (storyCount[st.file] || 0) + 1; }));
+    DATA.sessions.forEach(s => s.files.forEach(f => { if (!(f in storyCount)) storyCount[f] = Math.max(storyCount[f] || 0, 1); }));
+    function fileMeta(f) {
+      const ss = DATA.sessions.filter(s => s.files.includes(f) || (s.stories || []).some(st => st.file === f));
+      const ts = ss.map(s => +new Date(s.start)).filter(Boolean).sort((a, b) => a - b);
+      const agents = [...new Set(ss.map(s => s.agent || 'claude'))];
+      return { sessions: ss.length, first: ts[0], last: ts[ts.length - 1], agents };
+    }
+    /* ───────── panel: one place, everything connected ───────── */
+    const panel = document.getElementById('panel');
+    function pill(label, color, onclick, glyph) {
+      const b = document.createElement('button'); b.className = 'pill';
+      b.innerHTML = `<span class="dot" style="background:${color}"></span>${glyph ? glyph + ' ' : ''}`;
+      b.appendChild(document.createTextNode(label));
+      b.addEventListener('click', onclick);
+      return b;
+    }
+    function fileStories(f) {
+      let eps = DATA.sessions.flatMap(s =>
+        (s.stories || []).filter(st => st.file === f).map(st => ({ t: st.t, prompt: st.prompt, reason: st.reason, sid: s.id })));
+      if (!eps.length) eps = DATA.sessions.filter(s => s.files.includes(f))
+        .map(s => ({ t: s.start, prompt: s.prompt, reason: s.excerpt, sid: s.id }));
+      eps.sort((a, b) => new Date(a.t) - new Date(b.t));
+      return eps;
+    }
+    function bestCommitFor(f) {
+      const lk = DATA.links.filter(l => l.overlap.includes(f)).sort((a, b) => b.score - a.score)[0];
+      return lk ? { c: C[lk.c], inside: lk.inside } : null;
+    }
+    function showFile(f) {
+      const m = fileMeta(f);
+      panel.innerHTML = `<div class="pkind"><span class="k-file">${T('fileKind')}</span></div>
+    <h2>${esc(f)} — <em>${T('whyExist')}</em></h2>
+    <div class="pmeta">${m.sessions} ${T('sessions')}${m.first ? ` · ${fmtD(m.first)}${m.last && m.last !== m.first ? ' → ' + fmtD(m.last) : ''}` : ''} · ${m.agents.join(' + ')}</div>`;
+      const uaf = DATA.ua && DATA.ua.files && (DATA.ua.files[f] || DATA.ua.files[f.toLowerCase()]);
+      if (uaf) {
+        const fns = (uaf.functions || []).slice(0, 8), cls = (uaf.classes || []).slice(0, 4);
+        const more = Math.max(0, (uaf.functions || []).length - 8) + Math.max(0, (uaf.classes || []).length - 4);
+        panel.insertAdjacentHTML('beforeend', `<div class="uastruct">
+      <div class="ulabel"><span>${T('structVia')}</span>${uaf.layer ? `<span>${T('layer')}: ${esc(uaf.layer)}</span>` : ''}</div>
+      ${uaf.summary ? `<div class="usum" dir="auto">${esc(uaf.summary)}</div>` : ''}
+      <div class="utags">${cls.map(c => `<span class="ut cl">${esc(c)}</span>`).join('')}${fns.map(x => `<span class="ut fn">${esc(x)}</span>`).join('')}${more ? `<span class="ut">+${more}</span>` : ''}</div>
+    </div>`);
+      }
+      const eps = fileStories(f);
+      const bc = bestCommitFor(f);
+      if (!eps.length) { panel.insertAdjacentHTML('beforeend', '<p class="pempty">No recorded sessions touched this file.</p>'); return; }
+      eps.forEach((e, i) => {
+        const last = i === eps.length - 1;
+        const d = document.createElement('div'); d.className = 'epoch';
+        d.innerHTML = `<div class="ewhen">${fmt(e.t)}${last && bc && bc.inside ? ` · <span class="strong-link">${T('commitInside')}</span>` : ''}</div>
+      <div class="eprompt"><div class="plabel">${T('youAsked')}</div><p dir="auto">“${esc(e.prompt)}”</p></div>
+      ${e.reason ? `<div class="eanswer"><div class="alabel">${T('agentReasoned')}</div><p dir="auto">${esc(e.reason)}</p></div>` : ''}
+      ${last && bc && bc.c ? `<div class="ecommit">→ <span class="h">${bc.c.hash}</span> ${esc(bc.c.subject)}</div>` : ''}`;
+        d.querySelector('.ewhen').style.cursor = 'pointer';
+        panel.appendChild(d);
+      });
+    }
+    function showSession(id) {
+      const s = S[id]; if (!s) return;
+      const glyph = s.agent === 'codex' ? '◇' : '◈';
+      panel.innerHTML = `<div class="pkind"><span class="k-session">${glyph} ${esc(s.agent || 'claude')} session</span><span>${fmt(s.start)} · ${s.n} msgs</span></div>
+    <h2 dir="auto">${T('sessionAbout')}</h2>
+    <p class="pquote" dir="auto">“${esc(s.prompt || '(no prompt captured)')}”</p>`;
+      if (s.excerpt) panel.insertAdjacentHTML('beforeend',
+        `<div class="eanswer" style="border-top:1px solid var(--rule);margin-bottom:16px"><div class="alabel">${T('agentReasoned')}</div><p dir="auto">${esc(s.excerpt)}</p></div>`);
+      const files = [...new Set(s.files)].sort();
+      if (files.length) {
+        panel.insertAdjacentHTML('beforeend', `<div class="psec">${T('touched')}</div>`);
+        const ul = document.createElement('ul'); ul.className = 'linklist';
+        files.forEach(f => { const li = document.createElement('li'); li.appendChild(pill(f, 'var(--accent)', () => select('f:' + f))); ul.appendChild(li); });
+        panel.appendChild(ul);
+      }
+      const cs = DATA.links.filter(l => l.s === id).map(l => C[l.c]).filter(Boolean);
+      if (cs.length) {
+        panel.insertAdjacentHTML('beforeend', `<div class="psec">${T('produced')}</div>`);
+        const ul = document.createElement('ul'); ul.className = 'linklist';
+        cs.forEach(c => { const li = document.createElement('li'); li.appendChild(pill(`${c.hash} · ${c.subject}`, 'var(--warm)', () => select('c:' + c.hash))); ul.appendChild(li); });
+        panel.appendChild(ul);
+      }
+    }
+    function showCommit(h) {
+      const c = C[h]; if (!c) return;
+      panel.innerHTML = `<div class="pkind"><span class="k-commit">commit ${esc(c.hash)}</span><span>${fmt(c.time)}</span></div>
+    <h2 dir="auto">${esc(c.subject)}</h2>`;
+      const ls = DATA.links.filter(l => l.c === h);
+      const sess = ls.map(l => S[l.s]).filter(Boolean)[0];
+      if (sess) {
+        panel.insertAdjacentHTML('beforeend', `<div class="psec">${T('bornIn')}</div>`);
+        const ul = document.createElement('ul'); ul.className = 'linklist';
+        const li = document.createElement('li');
+        li.appendChild(pill(`${fmtD(sess.start)} · "${(sess.prompt || '').slice(0, 60)}"`, 'var(--cool)', () => select('s:' + sess.id), sess.agent === 'codex' ? '◇' : '◈'));
+        ul.appendChild(li); panel.appendChild(ul);
+        if (ls[0].inside) panel.insertAdjacentHTML('beforeend', `<div class="ewhen" style="margin-bottom:14px"><span class="strong-link">${T('certain')}</span></div>`);
+      } else {
+        panel.insertAdjacentHTML('beforeend', `<p class="pempty" dir="auto">${T('noSessionLinked')}</p>`);
+      }
+      if (c.files && c.files.length) {
+        panel.insertAdjacentHTML('beforeend', `<div class="psec">${T('filesIn')}</div>`);
+        const ul = document.createElement('ul'); ul.className = 'linklist';
+        c.files.forEach(f => { const li = document.createElement('li'); li.appendChild(pill(f, 'var(--accent)', () => select('f:' + f))); ul.appendChild(li); });
+        panel.appendChild(ul);
+      }
+    }
+    function showHome() {
+      const times = DATA.sessions.map(s => +new Date(s.start)).filter(Boolean).sort((a, b) => a - b);
+      const agents = DATA.sessions.reduce((m, s) => { const a = s.agent || 'claude'; m[a] = (m[a] || 0) + 1; return m; }, {});
+      const agentStr = Object.entries(agents).map(([a, n]) => `${n} ${a}`).join(' · ');
+      panel.innerHTML = `<div class="pkind"><span class="k-file">${T('overview')}</span></div>
+    <h2 dir="auto">${T('glanceT')}</h2>
+    <div class="pmeta" dir="auto">${times.length ? `${T('workedOn')} ${fmtD(times[0])} → ${fmtD(times[times.length - 1])}<br>` : ''}${agentStr}${DATA.hasGit ? ` · ${strong} ${T('of')} ${DATA.links.length} ${T('nearCertain')}` : ''}</div>`;
+      // highlights — the anchor: three doors into the story
+      const ranked0 = allFiles.slice().sort((a, b) => (storyCount[b] || 0) - (storyCount[a] || 0));
+      const byTime = DATA.sessions.filter(s => s.start).sort((a, b) => new Date(a.start) - new Date(b.start));
+      const hl = [];
+      if (ranked0[0]) hl.push([T('hlMost'), ranked0[0] + ' · ' + (storyCount[ranked0[0]] || 0) + ' ' + T('stories'), () => select('f:' + ranked0[0]), 'var(--accent)']);
+      if (byTime.length) {
+        const last = byTime[byTime.length - 1];
+        hl.push([T('hlLatest'), fmtD(last.start) + ' · “' + (last.prompt || '').slice(0, 44) + '…”', () => select('s:' + last.id), 'var(--cool)']);
+        hl.push([T('hlFirst'), fmtD(byTime[0].start) + ' · “' + (byTime[0].prompt || '').slice(0, 44) + '…”', () => select('s:' + byTime[0].id), 'var(--cool)']);
+      }
+      if (hl.length) {
+        const hwrap = document.createElement('div'); hwrap.style.cssText = 'display:flex;flex-direction:column;gap:8px;margin-bottom:18px';
+        hl.forEach(([lab, val, go, col]) => {
+          const b = document.createElement('button'); b.className = 'pill'; b.style.cssText = 'display:block;white-space:normal;text-align:inherit;padding:10px 14px';
+          b.innerHTML = `<span class="dot" style="background:${col}"></span><span style="color:var(--faint);font-size:10px;letter-spacing:.1em;text-transform:uppercase">${lab}</span><br>`;
+          b.appendChild(document.createTextNode(val));
+          b.addEventListener('click', go); hwrap.appendChild(b);
+        });
+        panel.appendChild(hwrap);
+      }
+      if (!allFiles.length) {
+        panel.insertAdjacentHTML('beforeend', `<p class="pempty"><span class="big">No sessions found for this folder.</span>
+      Run <b>python gitwhy.py archive</b>, use Claude Code or Codex here, then re-run gitwhy.</p>`);
+        return;
+      }
+      const inp = document.createElement('input'); inp.className = 'psearch'; inp.placeholder = T('filter');
+      panel.appendChild(inp);
+      panel.insertAdjacentHTML('beforeend', `<div class="psec">${T('byActivity')}</div>`);
+      const ul = document.createElement('ul'); ul.className = 'linklist'; panel.appendChild(ul);
+      const ranked = allFiles.slice().sort((a, b) => (storyCount[b] || 0) - (storyCount[a] || 0));
+      function renderList(q) {
+        ul.innerHTML = '';
+        ranked.filter(f => !q || f.toLowerCase().includes(q)).forEach(f => {
+          const li = document.createElement('li');
+          const p = pill(f, 'var(--accent)', () => select('f:' + f));
+          p.insertAdjacentHTML('beforeend', `<span class="cnt">· ${storyCount[f] || 0} ${(storyCount[f] || 0) === 1 ? T('story') : T('stories')}</span>`);
+          li.appendChild(p); ul.appendChild(li);
+        });
+      }
+      renderList('');
+      inp.addEventListener('input', () => renderList(inp.value.trim().toLowerCase()));
+    }
+    function esc(x) { const d = document.createElement('div'); d.textContent = x == null ? '' : String(x); return d.innerHTML; }
+
+    /* selection — shared between panel and graph */
+    let selectedId = null, selectHook = null;
+    function select(id) {
+      selectedId = id;
+      if (!id) { showHome(); if (selectHook) selectHook(null); return; }
+      if (id.startsWith('f:')) showFile(id.slice(2));
+      else if (id.startsWith('s:')) showSession(id.slice(2));
+      else if (id.startsWith('c:')) showCommit(id.slice(2));
+      addBack();
+      if (selectHook) selectHook(id);
+    }
+    function addBack() {
+      const b = document.createElement('button'); b.className = 'pill'; b.style.marginBottom = '14px';
+      b.textContent = T('back');
+      b.addEventListener('click', () => select(null));
+      panel.insertBefore(b, panel.firstChild);
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') select(null); });
+    window.gwSelect = select;
+    function applyLang(l) {
+      LANG = l;
+      document.documentElement.lang = l;
+      document.getElementById('tag1').textContent = T('tag1');
+      document.getElementById('tag2').textContent = T('tag2');
+      document.getElementById('lgS').textContent = T('legendS');
+      document.getElementById('lgC').textContent = T('legendC');
+      document.getElementById('lgF').textContent = T('legendF');
+      document.getElementById('ghint').textContent = T('hint');
+      const tt = document.getElementById('tlTitle'); if (tt) tt.textContent = T('tlTitle');
+      const rs = document.getElementById('rlS'); if (rs && rs.textContent.includes('·')) rs.textContent = T('sessions') + ' · ' + DATA.sessions.length;
+      const rc = document.getElementById('rlC'); if (rc && rc.textContent.includes('·')) rc.textContent = T('commits') + ' · ' + DATA.commits.length;
+      renderStats();
+      select(selectedId);
+    }
+    document.getElementById('langSel').addEventListener('change', e => applyLang(e.target.value));
+    showHome();
+
+    /* ───────── timeline strip ───────── */
+    (function () {
+      const evts = [
+        ...DATA.sessions.filter(s => s.start).map(s => ({ t: +new Date(s.start), id: 's:' + s.id, col: 'var(--cool)', tip: (s.agent || 'claude') + ' session · ' + fmtD(s.start) + ' · "' + (s.prompt || '').slice(0, 70) + '"' })),
+        ...DATA.commits.filter(c => c.time).map(c => ({ t: +new Date(c.time), id: 'c:' + c.hash, col: 'var(--warm)', tip: 'commit ' + c.hash + ' · ' + c.subject.slice(0, 70) }))
+      ];
+      if (evts.length < 2) return;
+      const lo = Math.min(...evts.map(e => e.t)), hi = Math.max(...evts.map(e => e.t));
+      const span = Math.max(1, hi - lo);
+      document.getElementById('tl').style.display = 'block';
+      document.getElementById('tlRange').textContent = fmtD(lo) + ' — ' + fmtD(hi);
+      document.getElementById('rlS').textContent = T('sessions') + ' · ' + DATA.sessions.length;
+      document.getElementById('rlC').textContent = T('commits') + ' · ' + DATA.commits.length;
+      // month ticks so the axis reads without hovering
+      const ticks = document.getElementById('tlTicks'); ticks.innerHTML = '';
+      const n = Math.min(6, Math.max(2, Math.round((hi - lo) / (1000 * 3600 * 24 * 20))));
+      for (let i = 0; i <= n; i++) {
+        const tt = lo + (span * i / n);
+        const el = document.createElement('span'); el.className = 'tltick';
+        el.style.left = (3 + ((tt - lo) / span) * 94) + '%';
+        el.textContent = fmtD(tt);
+        ticks.appendChild(el);
+      }
+      const laneS = document.getElementById('laneS'), laneC = document.getElementById('laneC');
+      evts.forEach(e => {
+        const d = document.createElement('div'); d.className = 'tldot';
+        d.style.left = (3 + ((e.t - lo) / span) * 94) + '%';
+        d.style.background = e.col;
+        d.title = e.tip;
+        d.addEventListener('click', () => select(e.id));
+        (e.id[0] === 's' ? laneS : laneC).appendChild(d);
+      });
+    })();
+
+    /* ───────── graph: the map ───────── */
+    (function () {
+      try {
+        const canvas = document.getElementById('graph');
+        const ctx = canvas.getContext && canvas.getContext('2d');
+        if (!ctx) { return; }
+        const tip = document.getElementById('gtip');
+        const COL = { session: '#8aa394', commit: '#c97847', file: '#d4a259', edge: 'rgba(184,173,151,.16)', edgeHot: '#d4a259', label: '#b8ad97', ring: '#ede5d4' };
+        let W, H, dpr;
+        function resize() {
+          dpr = window.devicePixelRatio || 1;
+          const nw = canvas.clientWidth || 800, nh = canvas.clientHeight || 540;
+          const changed = nw !== W || nh !== H;
+          W = nw; H = nh; canvas.width = W * dpr; canvas.height = H * dpr;
+          if (changed) wake();
+        }
+        let cooling = 1, dragging = null, hover = null, asleep = false;
+        function wake() { cooling = Math.max(cooling || 0, 0.55); asleep = false; }
+        const nodes = [], edges = [], byId = {};
+        function addNode(id, type, label, meta) {
+          if (byId[id]) return byId[id];
+          const n = { id, type, label, meta, x: 0, y: 0, vx: 0, vy: 0, r: type === 'file' ? 6 : type === 'commit' ? 7 : 9, deg: 0 };
+          byId[id] = n; nodes.push(n); return n;
+        }
+        function addEdge(a, b, hot) { edges.push({ a, b, hot: !!hot }); a.deg++; b.deg++; }
+        DATA.sessions.forEach(s => {
+          const glyph = s.agent === 'codex' ? '◇' : '◈';
+          const sn = addNode('s:' + s.id, 'session', glyph + ' ' + (s.start ? fmtD(s.start) : s.id.slice(0, 8)), (s.agent || 'claude') + ' · ' + s.prompt);
+          s.files.forEach(f => addEdge(sn, addNode('f:' + f, 'file', f, f)));
+        });
+        DATA.links.forEach(l => {
+          const sn = byId['s:' + l.s], c = C[l.c]; if (!sn || !c) return;
+          const cn = addNode('c:' + l.c, 'commit', l.c, c.subject);
+          addEdge(sn, cn, l.inside);
+          l.overlap.forEach(f => { const fn = byId['f:' + f]; if (fn) addEdge(cn, fn); });
+        });
+        const structEdges = [];
+        if (DATA.ua && DATA.ua.edges) {
+          DATA.ua.edges.forEach(([a, b, ty]) => {
+            const na = byId['f:' + a] || byId['f:' + a.toLowerCase()], nb = byId['f:' + b] || byId['f:' + b.toLowerCase()];
+            if (na && nb) structEdges.push({ a: na, b: nb, ty });
+          });
+          if (structEdges.length) { const lg = document.getElementById('lgUA'); if (lg) lg.style.display = 'inline'; }
+        }
+        if (!nodes.length) { canvas.parentElement.querySelector('.ghint').textContent = 'no data to draw yet'; return; }
+
+        resize(); window.addEventListener('resize', resize);
+        nodes.forEach(n => { n.x = W / 2 + (Math.random() - .5) * W * .7; n.y = H / 2 + (Math.random() - .5) * H * .7; });
+        const REP = 1400 * Math.min(1, 140 / nodes.length);
+
+        /* physics: settles and STOPS; drag/resize wakes it */
+        function tick() {
+          for (let i = 0; i < nodes.length; i++)for (let j = i + 1; j < nodes.length; j++) {
+            const a = nodes[i], b = nodes[j];
+            let dx = a.x - b.x, dy = a.y - b.y, d2 = dx * dx + dy * dy || 1;
+            if (d2 < 40000) { const f = REP / d2; dx *= f; dy *= f; a.vx += dx; a.vy += dy; b.vx -= dx; b.vy -= dy; }
+          }
+          edges.forEach(e => {
+            let dx = e.b.x - e.a.x, dy = e.b.y - e.a.y, d = Math.sqrt(dx * dx + dy * dy) || 1;
+            const f = (d - 90) * 0.004; dx = dx / d * f; dy = dy / d * f;
+            e.a.vx += dx * d; e.a.vy += dy * d; e.b.vx -= dx * d; e.b.vy -= dy * d;
+          });
+          let energy = 0;
+          nodes.forEach(n => {
+            n.vx += (W / 2 - n.x) * 0.0015; n.vy += (H / 2 - n.y) * 0.0015;
+            if (n !== dragging) { n.x += n.vx * cooling; n.y += n.vy * cooling; }
+            n.vx *= 0.86; n.vy *= 0.86;
+            n.x = Math.max(20, Math.min(W - 20, n.x)); n.y = Math.max(20, Math.min(H - 20, n.y));
+            energy += Math.abs(n.vx) + Math.abs(n.vy);
+          });
+          cooling *= 0.992;
+          if (cooling < 0.02 || energy / nodes.length < 0.03) asleep = true;
+        }
+        function nbrs(n) {
+          const set = new Set([n]);
+          edges.forEach(e => { if (e.a === n) set.add(e.b); if (e.b === n) set.add(e.a); });
+          structEdges.forEach(e => { if (e.a === n) set.add(e.b); if (e.b === n) set.add(e.a); });
+          return set;
+        }
+        function draw() {
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+          const sel = selectedId ? byId[selectedId] : null;
+          const hi = (hover || sel) ? nbrs(hover || sel) : null;
+          edges.forEach(e => {
+            const hot = hi && hi.has(e.a) && hi.has(e.b);
+            ctx.strokeStyle = hot ? COL.edgeHot : COL.edge; ctx.lineWidth = hot ? 1.4 : 1;
+            ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y); ctx.stroke();
+          });
+          if (structEdges.length) {
+            ctx.save(); ctx.setLineDash([5, 4]);
+            structEdges.forEach(e => {
+              const hot = hi && hi.has(e.a) && hi.has(e.b);
+              ctx.strokeStyle = hot ? '#8fb8dd' : 'rgba(107,148,184,.45)'; ctx.lineWidth = hot ? 1.6 : 1.1;
+              ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y); ctx.stroke();
+            });
+            ctx.restore();
+          }
+          nodes.forEach(n => {
+            const dim = hi && !hi.has(n);
+            ctx.globalAlpha = dim ? 0.22 : 1;
+            if (n === sel) {
+              ctx.strokeStyle = COL.ring; ctx.lineWidth = 1.5;
+              ctx.beginPath(); ctx.arc(n.x, n.y, n.r + Math.min(4, n.deg * 0.4) + 4, 0, 7); ctx.stroke();
+            }
+            ctx.fillStyle = COL[n.type];
+            ctx.beginPath(); ctx.arc(n.x, n.y, n.r + Math.min(4, n.deg * 0.4), 0, 7); ctx.fill();
+            ctx.globalAlpha = 1;
+          });
+          ctx.font = '10px JetBrains Mono, monospace';
+          const boxes = [];
+          const cand = nodes.slice().sort((a, b) => {
+            const pa = (a === sel ? 2000 : 0) + (hi && hi.has(a) ? 1000 : 0) + a.deg, pb = (b === sel ? 2000 : 0) + (hi && hi.has(b) ? 1000 : 0) + b.deg;
+            return pb - pa;
+          });
+          cand.forEach(n => {
+            if (hi && !hi.has(n) && n !== sel) return;
+            if (!(hi && hi.has(n)) && n !== sel && n.type === 'file' && n.deg < 2 && nodes.length >= 40) return;
+            const txt = n.label.length > 26 ? n.label.slice(0, 24) + '…' : n.label;
+            const w = ctx.measureText(txt).width, x = n.x + n.r + 6, y = n.y + 3;
+            const box = [x - 2, y - 10, w + 4, 13];
+            if (boxes.some(b => !(box[0] > b[0] + b[2] || b[0] > box[0] + box[2] || box[1] > b[1] + b[3] || b[1] > box[1] + box[3]))) return;
+            boxes.push(box);
+            ctx.fillStyle = COL.label; ctx.fillText(txt, x, y);
+          });
+        }
+        (function loop() { if (!asleep || dragging) tick(); draw(); requestAnimationFrame(loop); })();
+
+        function pick(mx, my) {
+          let best = null, bd = 18 * 18;
+          nodes.forEach(n => { const d = (n.x - mx) ** 2 + (n.y - my) ** 2; if (d < bd) { bd = d; best = n; } }); return best;
+        }
+        function pos(ev) {
+          const r = canvas.getBoundingClientRect();
+          const p = ev.touches ? ev.touches[0] : ev; return [p.clientX - r.left, p.clientY - r.top, p.clientX, p.clientY];
+        }
+        let moved = false;
+        canvas.addEventListener('pointermove', ev => {
+          const [mx, my, cx, cy] = pos(ev);
+          if (dragging) { moved = true; dragging.x = mx; dragging.y = my; wake(); return; }
+          hover = pick(mx, my);
+          if (hover) {
+            tip.style.display = 'block'; tip.style.left = (cx + 14) + 'px'; tip.style.top = (cy + 14) + 'px';
+            tip.textContent = (hover.type === 'session' ? 'session · "' : hover.type === 'commit' ? 'commit · ' : 'file · ') +
+              (hover.meta || hover.label) + (hover.type === 'session' ? '"' : '');
+          } else tip.style.display = 'none';
+        });
+        canvas.addEventListener('pointerdown', ev => {
+          const [mx, my] = pos(ev);
+          dragging = pick(mx, my); moved = false;
+          if (dragging) canvas.setPointerCapture(ev.pointerId);
+        });
+        document.querySelector('.ghint').textContent = 'click a node · click empty space to go back · drag to rearrange';
+        canvas.addEventListener('pointerup', ev => {
+          if (!moved) {
+            if (dragging) select(dragging.id);          // click a node = open its story
+            else select(null);                          // click empty space = back to overview
+          }
+          dragging = null;
+        });
+        canvas.addEventListener('pointerleave', () => { hover = null; tip.style.display = 'none'; });
+        selectHook = () => { };   // selection only changes highlighting; draw loop picks it up — no physics
+      } catch (err) {
+        const h = document.querySelector('.ghint');
+        if (h) { h.textContent = 'graph error: ' + err.message; h.style.color = 'var(--hot)'; }
+      }
+    })();
+  </script>
+</body>
+
+</html>
