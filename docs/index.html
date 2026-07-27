@@ -562,6 +562,68 @@
       color: var(--warm)
     }
 
+    /* help card */
+    .helpbtn {
+      background: var(--bg);
+      color: var(--dim);
+      border: 1px solid var(--rule);
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 3px 9px;
+      cursor: pointer
+    }
+
+    .helpbtn:hover {
+      border-color: var(--accent);
+      color: var(--ink)
+    }
+
+    .helpcard {
+      border: 1px solid var(--accent);
+      background: var(--surface);
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      display: none
+    }
+
+    .helpcard.open {
+      display: block
+    }
+
+    .helpcard h3 {
+      font-family: var(--serif);
+      font-size: 16px;
+      font-weight: 550;
+      margin-bottom: 10px
+    }
+
+    .helpcard ul {
+      list-style: none
+    }
+
+    .helpcard li {
+      font-size: 13px;
+      color: var(--dim);
+      line-height: 1.6;
+      margin-bottom: 7px;
+      padding-left: 2px
+    }
+
+    .helpcard .hk {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--ink)
+    }
+
+    .helpcard .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 7px;
+      vertical-align: middle
+    }
+
     footer {
       margin-top: 34px;
       font-family: var(--mono);
@@ -602,6 +664,7 @@
       <div class="logo"><b>gitwhy</b> · provenance for AI-written code</div>
       <div class="logo" style="display:flex;gap:14px;align-items:baseline">
         <span id="repoName"></span>
+        <button class="helpbtn" id="helpBtn">?</button>
         <select id="langSel"
           style="background:var(--bg);color:var(--dim);border:1px solid var(--rule);font-family:var(--mono);font-size:11px;padding:3px 6px">
           <option value="en">EN</option>
@@ -611,6 +674,11 @@
     </header>
     <h1><code>git blame</code> <span id="tag1">tells you who.</span> <em id="tag2">This tells you why.</em></h1>
     <div class="stats" id="stats"></div>
+
+    <div class="helpcard" id="helpCard">
+      <h3 id="hcTitle"></h3>
+      <ul id="hcList"></ul>
+    </div>
 
     <div class="tl" id="tl" style="display:none">
       <div class="tlabel"><span id="tlTitle">activity over time — click a dot</span><span id="tlRange"></span></div>
@@ -648,7 +716,7 @@
   </div>
 
   <script>
-    const DATA = {"repo": "keystroke-decoder (demo data)", "hasGit": true, "ua": {"count": 42, "dir": ".ua", "edges": [["train_v4.py", "models/dann.py", "imports"], ["train_v4.py", "eval/chrono.py", "calls"], ["eval/report.py", "eval/chrono.py", "imports"], ["features/posture.py", "train_v4.py", "calls"]], "files": {"models/dann.py": {"layer": "model", "summary": "Subject-adversarial branch: gradient-reversal head that strips subject identity from the encoder.", "functions": ["GradReverse.forward", "dann_lambda_schedule"], "classes": ["DANNHead"]}, "train_v4.py": {"layer": "training", "summary": "Main training loop with LOSO evaluation and checkpointing.", "functions": ["train_epoch", "evaluate_loso", "save_checkpoint"], "classes": []}, "eval/chrono.py": {"layer": "evaluation", "summary": "Chronological split evaluator exposing within-session drift.", "functions": ["windowed_accuracy", "drift_curve"], "classes": []}}}, "sessions": [{"id": "sess-1", "agent": "claude", "start": "2026-07-24T11:16:37.278421+00:00", "n": 34, "prompt": "the per-user calibration is overfitting — LOSO accuracy drops 14 points on unseen subjects. can we try adversarial training to strip subject identity from the features?", "excerpt": "The cleanest fix is a DANN-style gradient reversal layer: a subject classifier head whose gradient is reversed into the encoder, so the encoder is explicitly punished for encoding subject identity. I'll add a lambda warmup schedule since flipping it on at full strength destabilises the main task early in training.", "stories": [{"file": "train_v4.py", "t": "2026-07-24T11:26:37.278421+00:00", "prompt": "the per-user calibration is overfitting — LOSO accuracy drops 14 points on unseen subjects. can we try adversarial training to strip subject identity from the features?", "reason": "The cleanest fix is a DANN-style gradient reversal layer: a subject classifier head whose gradient is reversed into the encoder, so the encoder is explicitly punished for encoding subject identity. I'll add a lambda warmup schedule since flipping it on at full strength destabilises the main task early in training."}, {"file": "models/dann.py", "t": "2026-07-24T11:26:37.278421+00:00", "prompt": "the per-user calibration is overfitting — LOSO accuracy drops 14 points on unseen subjects. can we try adversarial training to strip subject identity from the features?", "reason": "The cleanest fix is a DANN-style gradient reversal layer: a subject classifier head whose gradient is reversed into the encoder, so the encoder is explicitly punished for encoding subject identity. I'll add a lambda warmup schedule since flipping it on at full strength destabilises the main task early in training."}], "files": ["models/dann.py", "train_v4.py"]}, {"id": "sess-2", "agent": "codex", "start": "2026-07-25T11:16:37.278421+00:00", "n": 34, "prompt": "rolling EMA baseline for wrist posture — sessions drift within minutes, the fixed baseline from calibration is stale by minute 3", "excerpt": "Replacing the static calibration frame with an exponential moving average (half-life ≈ 90 s) of the wrist-relative origin. Chronological evaluation is the honest test here — random splits were hiding the drift entirely.", "stories": [{"file": "features/posture.py", "t": "2026-07-25T11:26:37.278421+00:00", "prompt": "rolling EMA baseline for wrist posture — sessions drift within minutes, the fixed baseline from calibration is stale by minute 3", "reason": "Replacing the static calibration frame with an exponential moving average (half-life ≈ 90 s) of the wrist-relative origin. Chronological evaluation is the honest test here — random splits were hiding the drift entirely."}, {"file": "train_v4.py", "t": "2026-07-25T11:26:37.278421+00:00", "prompt": "rolling EMA baseline for wrist posture — sessions drift within minutes, the fixed baseline from calibration is stale by minute 3", "reason": "Replacing the static calibration frame with an exponential moving average (half-life ≈ 90 s) of the wrist-relative origin. Chronological evaluation is the honest test here — random splits were hiding the drift entirely."}], "files": ["features/posture.py", "train_v4.py"]}, {"id": "sess-3", "agent": "claude", "start": "2026-07-26T10:16:37.278421+00:00", "n": 34, "prompt": "add a Weibull-based OOD gate so the decoder abstains instead of guessing on out-of-distribution hand shapes", "excerpt": "Fitting a Weibull to the tail of per-class max activation distances (EVT, OpenMax-style). Below threshold → abstain token rather than a forced key guess. This trades 2% coverage for a 9-point precision gain on the chronological split.", "stories": [{"file": "models/ood_gate.py", "t": "2026-07-26T10:26:37.278421+00:00", "prompt": "add a Weibull-based OOD gate so the decoder abstains instead of guessing on out-of-distribution hand shapes", "reason": "Fitting a Weibull to the tail of per-class max activation distances (EVT, OpenMax-style). Below threshold → abstain token rather than a forced key guess. This trades 2% coverage for a 9-point precision gain on the chronological split."}, {"file": "eval/chrono.py", "t": "2026-07-26T10:26:37.278421+00:00", "prompt": "add a Weibull-based OOD gate so the decoder abstains instead of guessing on out-of-distribution hand shapes", "reason": "Fitting a Weibull to the tail of per-class max activation distances (EVT, OpenMax-style). Below threshold → abstain token rather than a forced key guess. This trades 2% coverage for a 9-point precision gain on the chronological split."}], "files": ["eval/chrono.py", "models/ood_gate.py"]}, {"id": "sess-4", "agent": "codex", "start": "2026-07-27T09:16:37.278421+00:00", "n": 34, "prompt": "eval report generator — one HTML page per run with confusion matrix, per-subject LOSO table, drift curves", "excerpt": "Single self-contained HTML per run, embedding the confusion matrix as inline SVG so reports stay diffable in git and viewable without a server.", "stories": [{"file": "eval/report.py", "t": "2026-07-27T09:26:37.278421+00:00", "prompt": "eval report generator — one HTML page per run with confusion matrix, per-subject LOSO table, drift curves", "reason": "Single self-contained HTML per run, embedding the confusion matrix as inline SVG so reports stay diffable in git and viewable without a server."}, {"file": "eval/chrono.py", "t": "2026-07-27T09:26:37.278421+00:00", "prompt": "eval report generator — one HTML page per run with confusion matrix, per-subject LOSO table, drift curves", "reason": "Single self-contained HTML per run, embedding the confusion matrix as inline SVG so reports stay diffable in git and viewable without a server."}], "files": ["eval/chrono.py", "eval/report.py"]}], "commits": [{"hash": "a3f9c21", "subject": "Add DANN subject-adversarial branch with GRL warmup", "time": "2026-07-24T12:10:37.278421+00:00", "files": ["train_v4.py", "models/dann.py"]}, {"hash": "b7d0e55", "subject": "Replace static posture baseline with rolling EMA (90s half-life)", "time": "2026-07-25T12:16:37.278421+00:00", "files": ["features/posture.py", "train_v4.py"]}, {"hash": "c1a8f02", "subject": "Weibull OOD gate: abstain on out-of-distribution hand shapes", "time": "2026-07-26T11:04:37.278421+00:00", "files": ["models/ood_gate.py", "eval/chrono.py"]}, {"hash": "d9e4b77", "subject": "Per-run HTML eval reports with inline-SVG confusion matrix", "time": "2026-07-27T10:10:37.278421+00:00", "files": ["eval/report.py"]}, {"hash": "e2c6a90", "subject": "Initial chronological eval protocol", "time": "2026-07-22T15:16:37.278421+00:00", "files": ["eval/chrono.py"]}], "links": [{"s": "sess-1", "c": "a3f9c21", "score": 12, "overlap": ["models/dann.py", "train_v4.py"], "inside": true}, {"s": "sess-2", "c": "b7d0e55", "score": 12, "overlap": ["features/posture.py", "train_v4.py"], "inside": true}, {"s": "sess-3", "c": "c1a8f02", "score": 12, "overlap": ["eval/chrono.py", "models/ood_gate.py"], "inside": true}, {"s": "sess-4", "c": "d9e4b77", "score": 10, "overlap": ["eval/report.py"], "inside": true}]};
+    const DATA = {"repo": "keystroke-decoder (demo data)", "hasGit": true, "ua": {"count": 42, "dir": ".ua", "edges": [["train_v4.py", "models/dann.py", "imports"], ["train_v4.py", "eval/chrono.py", "calls"], ["eval/report.py", "eval/chrono.py", "imports"], ["features/posture.py", "train_v4.py", "calls"]], "files": {"models/dann.py": {"layer": "model", "summary": "Subject-adversarial branch: gradient-reversal head that strips subject identity from the encoder.", "functions": ["GradReverse.forward", "dann_lambda_schedule"], "classes": ["DANNHead"]}, "train_v4.py": {"layer": "training", "summary": "Main training loop with LOSO evaluation and checkpointing.", "functions": ["train_epoch", "evaluate_loso", "save_checkpoint"], "classes": []}, "eval/chrono.py": {"layer": "evaluation", "summary": "Chronological split evaluator exposing within-session drift.", "functions": ["windowed_accuracy", "drift_curve"], "classes": []}}}, "sessions": [{"id": "sess-1", "agent": "claude", "start": "2026-07-24T11:32:23.647114+00:00", "n": 34, "prompt": "the per-user calibration is overfitting — LOSO accuracy drops 14 points on unseen subjects. can we try adversarial training to strip subject identity from the features?", "excerpt": "The cleanest fix is a DANN-style gradient reversal layer: a subject classifier head whose gradient is reversed into the encoder, so the encoder is explicitly punished for encoding subject identity. I'll add a lambda warmup schedule since flipping it on at full strength destabilises the main task early in training.", "stories": [{"file": "train_v4.py", "t": "2026-07-24T11:42:23.647114+00:00", "prompt": "the per-user calibration is overfitting — LOSO accuracy drops 14 points on unseen subjects. can we try adversarial training to strip subject identity from the features?", "reason": "The cleanest fix is a DANN-style gradient reversal layer: a subject classifier head whose gradient is reversed into the encoder, so the encoder is explicitly punished for encoding subject identity. I'll add a lambda warmup schedule since flipping it on at full strength destabilises the main task early in training."}, {"file": "models/dann.py", "t": "2026-07-24T11:42:23.647114+00:00", "prompt": "the per-user calibration is overfitting — LOSO accuracy drops 14 points on unseen subjects. can we try adversarial training to strip subject identity from the features?", "reason": "The cleanest fix is a DANN-style gradient reversal layer: a subject classifier head whose gradient is reversed into the encoder, so the encoder is explicitly punished for encoding subject identity. I'll add a lambda warmup schedule since flipping it on at full strength destabilises the main task early in training."}], "files": ["models/dann.py", "train_v4.py"]}, {"id": "sess-2", "agent": "codex", "start": "2026-07-25T11:32:23.647114+00:00", "n": 34, "prompt": "rolling EMA baseline for wrist posture — sessions drift within minutes, the fixed baseline from calibration is stale by minute 3", "excerpt": "Replacing the static calibration frame with an exponential moving average (half-life ≈ 90 s) of the wrist-relative origin. Chronological evaluation is the honest test here — random splits were hiding the drift entirely.", "stories": [{"file": "features/posture.py", "t": "2026-07-25T11:42:23.647114+00:00", "prompt": "rolling EMA baseline for wrist posture — sessions drift within minutes, the fixed baseline from calibration is stale by minute 3", "reason": "Replacing the static calibration frame with an exponential moving average (half-life ≈ 90 s) of the wrist-relative origin. Chronological evaluation is the honest test here — random splits were hiding the drift entirely."}, {"file": "train_v4.py", "t": "2026-07-25T11:42:23.647114+00:00", "prompt": "rolling EMA baseline for wrist posture — sessions drift within minutes, the fixed baseline from calibration is stale by minute 3", "reason": "Replacing the static calibration frame with an exponential moving average (half-life ≈ 90 s) of the wrist-relative origin. Chronological evaluation is the honest test here — random splits were hiding the drift entirely."}], "files": ["features/posture.py", "train_v4.py"]}, {"id": "sess-3", "agent": "claude", "start": "2026-07-26T10:32:23.647114+00:00", "n": 34, "prompt": "add a Weibull-based OOD gate so the decoder abstains instead of guessing on out-of-distribution hand shapes", "excerpt": "Fitting a Weibull to the tail of per-class max activation distances (EVT, OpenMax-style). Below threshold → abstain token rather than a forced key guess. This trades 2% coverage for a 9-point precision gain on the chronological split.", "stories": [{"file": "models/ood_gate.py", "t": "2026-07-26T10:42:23.647114+00:00", "prompt": "add a Weibull-based OOD gate so the decoder abstains instead of guessing on out-of-distribution hand shapes", "reason": "Fitting a Weibull to the tail of per-class max activation distances (EVT, OpenMax-style). Below threshold → abstain token rather than a forced key guess. This trades 2% coverage for a 9-point precision gain on the chronological split."}, {"file": "eval/chrono.py", "t": "2026-07-26T10:42:23.647114+00:00", "prompt": "add a Weibull-based OOD gate so the decoder abstains instead of guessing on out-of-distribution hand shapes", "reason": "Fitting a Weibull to the tail of per-class max activation distances (EVT, OpenMax-style). Below threshold → abstain token rather than a forced key guess. This trades 2% coverage for a 9-point precision gain on the chronological split."}], "files": ["eval/chrono.py", "models/ood_gate.py"]}, {"id": "sess-4", "agent": "codex", "start": "2026-07-27T09:32:23.647114+00:00", "n": 34, "prompt": "eval report generator — one HTML page per run with confusion matrix, per-subject LOSO table, drift curves", "excerpt": "Single self-contained HTML per run, embedding the confusion matrix as inline SVG so reports stay diffable in git and viewable without a server.", "stories": [{"file": "eval/report.py", "t": "2026-07-27T09:42:23.647114+00:00", "prompt": "eval report generator — one HTML page per run with confusion matrix, per-subject LOSO table, drift curves", "reason": "Single self-contained HTML per run, embedding the confusion matrix as inline SVG so reports stay diffable in git and viewable without a server."}, {"file": "eval/chrono.py", "t": "2026-07-27T09:42:23.647114+00:00", "prompt": "eval report generator — one HTML page per run with confusion matrix, per-subject LOSO table, drift curves", "reason": "Single self-contained HTML per run, embedding the confusion matrix as inline SVG so reports stay diffable in git and viewable without a server."}], "files": ["eval/chrono.py", "eval/report.py"]}], "commits": [{"hash": "a3f9c21", "subject": "Add DANN subject-adversarial branch with GRL warmup", "time": "2026-07-24T12:26:23.647114+00:00", "files": ["train_v4.py", "models/dann.py"]}, {"hash": "b7d0e55", "subject": "Replace static posture baseline with rolling EMA (90s half-life)", "time": "2026-07-25T12:32:23.647114+00:00", "files": ["features/posture.py", "train_v4.py"]}, {"hash": "c1a8f02", "subject": "Weibull OOD gate: abstain on out-of-distribution hand shapes", "time": "2026-07-26T11:20:23.647114+00:00", "files": ["models/ood_gate.py", "eval/chrono.py"]}, {"hash": "d9e4b77", "subject": "Per-run HTML eval reports with inline-SVG confusion matrix", "time": "2026-07-27T10:26:23.647114+00:00", "files": ["eval/report.py"]}, {"hash": "e2c6a90", "subject": "Initial chronological eval protocol", "time": "2026-07-22T15:32:23.647114+00:00", "files": ["eval/chrono.py"]}], "links": [{"s": "sess-1", "c": "a3f9c21", "score": 12, "overlap": ["models/dann.py", "train_v4.py"], "inside": true}, {"s": "sess-2", "c": "b7d0e55", "score": 12, "overlap": ["features/posture.py", "train_v4.py"], "inside": true}, {"s": "sess-3", "c": "c1a8f02", "score": 12, "overlap": ["eval/chrono.py", "models/ood_gate.py"], "inside": true}, {"s": "sess-4", "c": "d9e4b77", "score": 10, "overlap": ["eval/report.py"], "inside": true}]};
     /* ── i18n: add a language = add a dictionary ── */
     const STR = {
       en: {
@@ -664,7 +732,14 @@
         filesIn: 'Files in this commit', noSessionLinked: 'No AI session linked to this commit (made outside recorded sessions, or its transcript is gone).',
         back: '← overview', session: 'session', commit: 'commit', msgs: 'msgs', commitInside: 'commit made inside this session',
         structVia: 'Structure — via Understand-Anything', layer: 'layer', functions: 'functions', classes: 'classes',
-        hlMost: 'Most worked file', hlLatest: 'Latest work', hlFirst: 'Where it began', startHint: 'Click a highlight, a timeline dot, or any node in the graph.'
+        hlMost: 'Most worked file', hlLatest: 'Latest work', hlFirst: 'Where it began', startHint: 'Click a highlight, a timeline dot, or any node in the graph.',
+        hcTitle: 'How to read this report', hcClose: 'Got it — click ? anytime to reopen.',
+        hc1: 'Every time you build with an AI agent, that conversation is a <b>session</b> — and gitwhy links it to the <b>commits</b> and <b>files</b> it produced.',
+        hc2: '<b>Timeline</b> (top): when the work happened. Every dot is clickable.',
+        hc3: '<b>Graph</b> (left): green sessions, orange commits, gold files — a line means "shaped / produced". Drag nodes; click anything.',
+        hc4: '<b>Panel</b> (right): the story of whatever you clicked. A file\u2019s page reads: <span class="hk">you asked \u2192 the agent reasoned \u2192 the commit</span>.',
+        hc5: 'Blue dashed lines (if present) are code structure from Understand-Anything, merged in automatically.',
+        hc6: 'Everything here was generated locally from your own transcripts and git history. Quotes are verbatim \u2014 nothing is summarized or invented.'
       },
       fa: {
         tag1: 'می‌گوید چه کسی.', tag2: 'این می‌گوید چرا.', sessions: 'جلسه‌ها', commits: 'کامیت‌ها', links: 'پیوندها',
@@ -679,15 +754,23 @@
         filesIn: 'فایل‌های این کامیت', noSessionLinked: 'جلسه‌ای به این کامیت وصل نیست (خارج از جلسه‌های ثبت‌شده بوده یا رونوشتش پاک شده است).',
         back: '→ نمای کلی', session: 'جلسه', commit: 'کامیت', msgs: 'پیام', commitInside: 'کامیت داخل همین جلسه انجام شد',
         structVia: 'ساختار — از Understand-Anything', layer: 'لایه', functions: 'توابع', classes: 'کلاس‌ها',
-        hlMost: 'پرکارترین فایل', hlLatest: 'تازه‌ترین کار', hlFirst: 'نقطه‌ی شروع', startHint: 'روی یک برجسته، نقطه‌ی خط زمان یا هر گره‌ی گراف کلیک کنید.'
+        hlMost: 'پرکارترین فایل', hlLatest: 'تازه‌ترین کار', hlFirst: 'نقطه‌ی شروع', startHint: 'روی یک برجسته، نقطه‌ی خط زمان یا هر گره‌ی گراف کلیک کنید.',
+        hcTitle: 'راهنمای خواندن این گزارش', hcClose: 'فهمیدم — هر وقت خواستید ? را بزنید.',
+        hc1: 'هر بار که با یک ایجنت هوش مصنوعی کد می‌سازید، آن گفت‌وگو یک <b>جلسه</b> است — و gitwhy آن را به <b>کامیت‌ها</b> و <b>فایل‌هایی</b> که ساخته وصل می‌کند.',
+        hc2: '<b>خط زمان</b> (بالا): کارها کِی انجام شده. هر نقطه قابل کلیک است.',
+        hc3: '<b>گراف</b> (چپ): جلسه‌ها سبز، کامیت‌ها نارنجی، فایل‌ها طلایی — هر خط یعنی «شکل داد / ساخت». گره‌ها را بکشید؛ روی هرچیزی کلیک کنید.',
+        hc4: '<b>پنل</b> (راست): داستانِ همان چیزی که کلیک کردید. صفحه‌ی هر فایل این‌طور خوانده می‌شود: <span class="hk">شما خواستید ← ایجنت استدلال کرد ← کامیت</span>.',
+        hc5: 'خط‌چین‌های آبی (اگر باشند) ساختارِ کد از Understand-Anything هستند که خودکار ادغام شده‌اند.',
+        hc6: 'همه‌چیز به‌صورت محلی از رونوشت‌ها و تاریخچه‌ی git خودتان ساخته شده. نقل‌قول‌ها عیناً همان‌اند — هیچ‌چیز خلاصه یا ساخته نشده.'
       }
     };
     let LANG = 'en';
     const T = k => (STR[LANG] && STR[LANG][k]) || STR.en[k] || k;
     const S = Object.fromEntries(DATA.sessions.map(s => [s.id, s]));
     const C = Object.fromEntries(DATA.commits.map(c => [c.hash, c]));
-    const fmt = t => t ? new Date(t).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
-    const fmtD = t => t ? new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
+    const LOCALE = () => LANG === 'fa' ? 'fa-IR' : undefined;
+    const fmt = t => t ? new Date(t).toLocaleString(LOCALE(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+    const fmtD = t => t ? new Date(t).toLocaleDateString(LOCALE(), { month: 'short', day: 'numeric' }) : '';
 
     document.getElementById('repoName').textContent = DATA.repo;
     const strong = DATA.links.filter(l => l.inside).length;
@@ -890,15 +973,26 @@
       document.getElementById('lgF').textContent = T('legendF');
       document.getElementById('ghint').textContent = T('hint');
       const tt = document.getElementById('tlTitle'); if (tt) tt.textContent = T('tlTitle');
-      const rs = document.getElementById('rlS'); if (rs && rs.textContent.includes('·')) rs.textContent = T('sessions') + ' · ' + DATA.sessions.length;
-      const rc = document.getElementById('rlC'); if (rc && rc.textContent.includes('·')) rc.textContent = T('commits') + ' · ' + DATA.commits.length;
+      if (rebuildTimelineDates) rebuildTimelineDates();
+      renderHelp();
       renderStats();
       select(selectedId);
     }
+    function renderHelp() {
+      document.getElementById('hcTitle').textContent = T('hcTitle');
+      document.getElementById('hcList').innerHTML =
+        ['hc1', 'hc2', 'hc3', 'hc4', 'hc5', 'hc6'].map(k => `<li dir="auto">${T(k)}</li>`).join('') +
+        `<li dir="auto" style="color:var(--faint)">${T('hcClose')}</li>`;
+    }
+    renderHelp();
+    document.getElementById('helpBtn').addEventListener('click', () => {
+      document.getElementById('helpCard').classList.toggle('open');
+    });
     document.getElementById('langSel').addEventListener('change', e => applyLang(e.target.value));
     showHome();
 
     /* ───────── timeline strip ───────── */
+    let rebuildTimelineDates = null;
     (function () {
       const evts = [
         ...DATA.sessions.filter(s => s.start).map(s => ({ t: +new Date(s.start), id: 's:' + s.id, col: 'var(--cool)', tip: (s.agent || 'claude') + ' session · ' + fmtD(s.start) + ' · "' + (s.prompt || '').slice(0, 70) + '"' })),
@@ -908,19 +1002,21 @@
       const lo = Math.min(...evts.map(e => e.t)), hi = Math.max(...evts.map(e => e.t));
       const span = Math.max(1, hi - lo);
       document.getElementById('tl').style.display = 'block';
-      document.getElementById('tlRange').textContent = fmtD(lo) + ' — ' + fmtD(hi);
-      document.getElementById('rlS').textContent = T('sessions') + ' · ' + DATA.sessions.length;
-      document.getElementById('rlC').textContent = T('commits') + ' · ' + DATA.commits.length;
-      // month ticks so the axis reads without hovering
-      const ticks = document.getElementById('tlTicks'); ticks.innerHTML = '';
-      const n = Math.min(6, Math.max(2, Math.round((hi - lo) / (1000 * 3600 * 24 * 20))));
-      for (let i = 0; i <= n; i++) {
-        const tt = lo + (span * i / n);
-        const el = document.createElement('span'); el.className = 'tltick';
-        el.style.left = (3 + ((tt - lo) / span) * 94) + '%';
-        el.textContent = fmtD(tt);
-        ticks.appendChild(el);
-      }
+      rebuildTimelineDates = function () {
+        document.getElementById('tlRange').textContent = fmtD(lo) + ' — ' + fmtD(hi);
+        document.getElementById('rlS').textContent = T('sessions') + ' · ' + DATA.sessions.length;
+        document.getElementById('rlC').textContent = T('commits') + ' · ' + DATA.commits.length;
+        const ticks = document.getElementById('tlTicks'); ticks.innerHTML = '';
+        const n = Math.min(6, Math.max(2, Math.round((hi - lo) / (1000 * 3600 * 24 * 20))));
+        for (let i = 0; i <= n; i++) {
+          const tt = lo + (span * i / n);
+          const el = document.createElement('span'); el.className = 'tltick';
+          el.style.left = (3 + ((tt - lo) / span) * 94) + '%';
+          el.textContent = fmtD(tt);
+          ticks.appendChild(el);
+        }
+      };
+      rebuildTimelineDates();
       const laneS = document.getElementById('laneS'), laneC = document.getElementById('laneC');
       evts.forEach(e => {
         const d = document.createElement('div'); d.className = 'tldot';
