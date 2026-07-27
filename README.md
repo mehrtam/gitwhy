@@ -1,9 +1,13 @@
 # gitwhy
-![tests](https://github.com/mehrtam/gitwhy/actions/workflows/tests.yml/badge.svg) 
-
+![tests](https://github.com/mehrtam/gitwhy/actions/workflows/tests.yml/badge.svg)
 [![Live Demo](https://img.shields.io/badge/Live_Demo-try_it_now-2ea44f)](https://mehrtam.github.io/gitwhy/)
-
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.9+-3776AB)](#try-it-in-60-seconds)
+[![Claude Code](https://img.shields.io/badge/Claude_Code-8A2BE2)](#supported-agents)
+[![Codex](https://img.shields.io/badge/Codex-000000)](#supported-agents)
+[![100% Local](https://img.shields.io/badge/100%25_local-no_uploads-d4a259)](#what-is-this)
 [![Understand--Anything](https://img.shields.io/badge/reads-Understand--Anything_graphs-6b94b8)](https://github.com/Egonex-AI/Understand-Anything)
+
 **`git blame` tells you who wrote the line. This tells you why.**
 
 ## What is this?
@@ -73,16 +77,50 @@ Do this once. In `~/.claude/settings.json`:
 ⚠️ Do **not** use `0` — a known bug makes `0` stop transcripts being written at
 all ([#23710](https://github.com/anthropics/claude-code/issues/23710)).
 
-## Give your agent the memory
+## Feed it to your agent
 
-Add one line to your project's `CLAUDE.md` (or `AGENTS.md` for Codex):
+`GITWHY.md` is written *for* agents. Both Claude Code and Codex automatically read
+an instructions file from your repo root at the start of every session — you point
+that file at the digest once, and from then on every session begins already knowing
+*why* your code is the way it is.
 
-> Before exploring this codebase, read `GITWHY.md` — it explains why each file exists.
+**Claude Code** — add this line to your repo's `CLAUDE.md` (create the file if it
+doesn't exist):
 
-Agents read that file automatically at session start. The digest costs roughly
-**~130 tokens per file**, so even a large project's entire "why" fits in a few
-thousand tokens — instead of the agent re-deriving intent with grep/read loops
-every single session.
+```
+Before exploring this codebase, read GITWHY.md — it explains why each file exists
+and which sessions/commits shaped it.
+```
+
+**Codex CLI** — the same line, in `AGENTS.md` at the repo root.
+
+That's the whole setup. What the agent then reads looks like this:
+
+```
+## src/auth.py  · layer: service
+- 2026-04-01 [claude] refactor the auth flow to use short-lived tokens with refresh rotation
+- 2026-04-03 [codex] fix token refresh race on concurrent requests
+- commit aa61cae: Add refresh-token rotation with family revocation
+```
+
+The digest costs roughly **~130 tokens per file**, so even a large project's entire
+"why" fits in a few thousand tokens — instead of the agent burning far more
+re-deriving intent with grep/read loops every single session. (The `· layer:` tags
+appear when an Understand-Anything graph is present — see below.)
+
+**Keep it fresh:** re-run `python gitwhy.py .` after a work session, or automate it
+with a git post-commit hook — create `.git/hooks/post-commit` containing:
+
+```bash
+#!/bin/sh
+python gitwhy.py . > /dev/null 2>&1
+```
+
+(then `chmod +x .git/hooks/post-commit` on macOS/Linux). Every commit regenerates
+the digest, so the memory your agent reads is never stale.
+
+**For tools rather than agents**, the same provenance ships as `gitwhy.json` — see
+["What can I build on gitwhy.json?"](#what-can-i-build-on-gitwhyjson) below.
 
 ## Plays well with Understand-Anything
 
@@ -155,6 +193,8 @@ fingerprint.
 - MCP server so agents can *query* provenance ("why does this function exist?")
 - Cursor and Gemini CLI adapters
 - Auto-archive on session end via agent hooks
+- Optional `--translate` pass rendering content translations alongside the
+  verbatim originals (originals always kept — provenance stays verbatim)
 - Graph: time-axis layout and label physics for very dense projects
 
 ## Benchmarks
@@ -196,6 +236,13 @@ produced/touched edges — built *deterministically* from transcripts and
 `git log`. Every edge is a verifiable fact and costs zero LLM tokens to build.
 It is *not* (yet) a semantic knowledge graph — no entity extraction or
 embeddings. That query layer is the MCP-server roadmap item.
+
+**Why are the report's quotes in English even when I switch the UI to فارسی?**
+The language switcher translates the *interface* (labels, dates, hints). The
+quotes are *history* — the exact words you and the agent used, preserved
+verbatim. A provenance tool that rewrote your past conversations would be
+falsifying the record it exists to protect. If your sessions happened in
+Persian, your quotes display in Persian, RTL and all.
 
 ## Tests
 
