@@ -343,7 +343,27 @@ def load_ua_graph(repo: Path):
                         entry["classes"].append(n["name"])
                 if entry["layer"] is None and n.get("layer"):
                     entry["layer"] = n.get("layer")
-            return {"files": out, "count": len(nodes), "dir": d} if out else None
+            # map every node id -> its file, then lift edges to file<->file structural links
+            id2file = {}
+            for n in nodes:
+                if not isinstance(n, dict):
+                    continue
+                fp = n.get("filePath") or (n.get("id", "")[5:] if str(
+                    n.get("id", "")).startswith("file:") else None)
+                if n.get("id") and fp:
+                    id2file[n["id"]] = rel(fp)
+            fedges, seen = [], set()
+            for e in (g.get("edges") or []):
+                if not isinstance(e, dict):
+                    continue
+                a, b = id2file.get(e.get("source")), id2file.get(
+                    e.get("target"))
+                if a and b and a != b:
+                    key = (a, b, e.get("type", ""))
+                    if key not in seen and len(fedges) < 800:
+                        seen.add(key)
+                        fedges.append([a, b, e.get("type", "rel")])
+            return {"files": out, "edges": fedges, "count": len(nodes), "dir": d} if out else None
     return None
 
 # ------------------------- git -------------------------
@@ -483,6 +503,7 @@ def render(sessions, commits, links, repo_name, has_git, ua=None):
     payload = {
         "repo": repo_name, "hasGit": has_git,
         "ua": ({"count": ua["count"], "dir": ua["dir"],
+                "edges": ua.get("edges", []),
                 "files": {f: ua["files"][f] for f in ua["files"]}} if ua else None),
         "sessions": [{"id": s["id"], "agent": s.get("agent", "claude"),
                       "start": s["start"].isoformat(), "n": s["n_msgs"],
@@ -515,7 +536,11 @@ def report(repo: Path, demo=False):
             "train_v4.py": {"layer": "training", "summary": "Main training loop with LOSO evaluation and checkpointing.",
                             "functions": ["train_epoch", "evaluate_loso", "save_checkpoint"], "classes": []},
             "eval/chrono.py": {"layer": "evaluation", "summary": "Chronological split evaluator exposing within-session drift.",
-                               "functions": ["windowed_accuracy", "drift_curve"], "classes": []}}}
+                               "functions": ["windowed_accuracy", "drift_curve"], "classes": []}},
+              "edges": [["train_v4.py", "models/dann.py", "imports"],
+                        ["train_v4.py", "eval/chrono.py", "calls"],
+                        ["eval/report.py", "eval/chrono.py", "imports"],
+                        ["features/posture.py", "train_v4.py", "calls"]]}
     else:
         print("[*] scanning Claude Code transcripts (live + archive)…")
         sessions = find_sessions(repo)

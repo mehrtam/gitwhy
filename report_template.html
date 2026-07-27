@@ -631,6 +631,9 @@
             codex)</span>
           <span><span class="k" style="background:var(--warm)"></span><span id="lgC">commit</span></span>
           <span><span class="k" style="background:var(--accent)"></span><span id="lgF">file</span></span>
+          <span id="lgUA" style="display:none"><span
+              style="display:inline-block;width:14px;border-top:2px dashed #6b94b8;vertical-align:middle;margin-right:6px"></span>structure
+            (Understand-Anything)</span>
         </div>
         <div class="ghint" id="ghint">click any node · drag to rearrange</div>
         <div class="gtip" id="gtip"></div>
@@ -965,6 +968,14 @@
           addEdge(sn, cn, l.inside);
           l.overlap.forEach(f => { const fn = byId['f:' + f]; if (fn) addEdge(cn, fn); });
         });
+        const structEdges = [];
+        if (DATA.ua && DATA.ua.edges) {
+          DATA.ua.edges.forEach(([a, b, ty]) => {
+            const na = byId['f:' + a] || byId['f:' + a.toLowerCase()], nb = byId['f:' + b] || byId['f:' + b.toLowerCase()];
+            if (na && nb) structEdges.push({ a: na, b: nb, ty });
+          });
+          if (structEdges.length) { const lg = document.getElementById('lgUA'); if (lg) lg.style.display = 'inline'; }
+        }
         if (!nodes.length) { canvas.parentElement.querySelector('.ghint').textContent = 'no data to draw yet'; return; }
 
         resize(); window.addEventListener('resize', resize);
@@ -996,7 +1007,9 @@
         }
         function nbrs(n) {
           const set = new Set([n]);
-          edges.forEach(e => { if (e.a === n) set.add(e.b); if (e.b === n) set.add(e.a); }); return set;
+          edges.forEach(e => { if (e.a === n) set.add(e.b); if (e.b === n) set.add(e.a); });
+          structEdges.forEach(e => { if (e.a === n) set.add(e.b); if (e.b === n) set.add(e.a); });
+          return set;
         }
         function draw() {
           ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
@@ -1007,6 +1020,15 @@
             ctx.strokeStyle = hot ? COL.edgeHot : COL.edge; ctx.lineWidth = hot ? 1.4 : 1;
             ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y); ctx.stroke();
           });
+          if (structEdges.length) {
+            ctx.save(); ctx.setLineDash([5, 4]);
+            structEdges.forEach(e => {
+              const hot = hi && hi.has(e.a) && hi.has(e.b);
+              ctx.strokeStyle = hot ? '#8fb8dd' : 'rgba(107,148,184,.45)'; ctx.lineWidth = hot ? 1.6 : 1.1;
+              ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y); ctx.stroke();
+            });
+            ctx.restore();
+          }
           nodes.forEach(n => {
             const dim = hi && !hi.has(n);
             ctx.globalAlpha = dim ? 0.22 : 1;
